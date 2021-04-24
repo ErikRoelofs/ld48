@@ -1,4 +1,8 @@
 import sys, pygame, random
+
+pygame.init()
+clock = pygame.time.Clock()
+
 from oned import *
 from consts import *
 from functions import *
@@ -7,9 +11,6 @@ from altimeter import Altimeter
 from world import World
 
 from pygame.locals import*
-
-pygame.init()
-clock = pygame.time.Clock()
 
 
 def main():

@@ -1,5 +1,6 @@
 from oned import Point, AnimatedSolidLine, GradientLine, ArrayImage, AnimatedArrayImage
 from consts import *
+from soundplayer import play_sound, play_repeating, update_volume
 import random
 
 class SubSystem:
@@ -15,6 +16,11 @@ class SubSystem:
         self.damage = 0
         self.scratches = []
         self.static = make_static(100, 100)
+        self.engaged = False
+        self.power_availability = 1
+
+    def engage(self):
+        self.engaged = True
 
     def draw(self, start, end):
         size = end - start
@@ -52,9 +58,18 @@ class SubSystem:
         if real_percentage < 0:
             real_percentage = 0
         self.level = 1 - real_percentage
+        self.level_changed()
 
-    def get_strength(self, power_availability):
-        return self.level * power_availability * (1 - self.damage)
+    def level_changed(self):
+        pass
+
+    def set_available_power(self, available_power):
+        if self.power_availability != available_power:
+            self.power_availability = available_power
+            self.level_changed()
+
+    def get_strength(self):
+        return self.level * self.power_availability * (1 - self.damage)
 
     def get_power_consumption(self):
         return self.level * self.max_power_consumption
@@ -67,6 +82,7 @@ class SubSystem:
 
         while len(self.scratches) < self.damage * 10:
             self.scratches.append(random.randint(0, 100))
+        self.level_changed()
 
     def is_broken(self):
         return self.damage >= 1
@@ -171,6 +187,35 @@ class Heat:
 
     def set(self, temperature):
         self.temperature = temperature
+
+
+class Audio(SubSystem):
+
+    def play(self, command, external_volume):
+        play_sound(command, external_volume * self.get_volume())
+
+    def play_repeating(self, command, external_volume):
+        play_repeating(command, external_volume * self.get_volume())
+
+    def update_volume(self, command, new_volume):
+        update_volume(command,new_volume)
+
+    def get_volume(self):
+        return 1
+
+class Engine(SubSystem):
+
+    def __init__(self, oned, panel_color, output_color, off_color, max_power_consumption, audio):
+        super().__init__(oned, panel_color, output_color, off_color, max_power_consumption)
+        self.audio = audio
+
+    def engage(self):
+        super().engage()
+        self.audio.play_repeating(SOUND_ENGINE, self.get_strength())
+
+    def level_changed(self):
+        super().level_changed()
+        self.audio.update_volume(SOUND_ENGINE, self.get_strength())
 
 
 def make_static(amount = 100, static_depth = 100):

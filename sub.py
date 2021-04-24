@@ -1,6 +1,6 @@
 from oned import Point
 from consts import *
-from subsystem import SubSystem, PowerPlant, Battery, Heat
+from subsystem import SubSystem, PowerPlant, Battery, Heat, Audio, Engine
 import random
 
 class Sub:
@@ -11,12 +11,13 @@ class Sub:
         self.depth = 10
         self.speed = 0
         self.target_speed = 0
+        audio_sys = Audio(oned, (0, 255, 255), (0, 150, 150), (0, 0, 0), 200)
         self.system = [
-            SubSystem(oned, (255, 0, 0), (150, 0, 0), (0, 0, 0), 200),
+            Engine(oned, (255, 0, 0), (150, 0, 0), (0, 0, 0), 200, audio_sys),
             SubSystem(oned, (0, 255, 0), (0, 150, 0), (0, 0, 0), 200),
             SubSystem(oned, (0, 0, 255), (0, 0, 150), (0, 0, 0), 200),
             SubSystem(oned, (255, 255, 0), (150, 150, 0), (0, 0, 0), 200),
-            SubSystem(oned, (0, 255, 255), (0, 150, 150), (0, 0, 0), 200),
+            audio_sys,
             SubSystem(oned, (255, 0, 255), (150, 0, 150), (0, 0, 0), 200),
             SubSystem(oned, (255, 255, 255), (150, 150, 150), (0, 0, 0), 200),
         ]
@@ -29,6 +30,7 @@ class Sub:
         self.heat = Heat(oned)
         self.world = world
         self.overheat_damage_counter = 0
+        self.has_impacted = False
 
     def draw(self, position):
         self.oned.draw(self.graphic, position - 4, position + 4)
@@ -38,6 +40,7 @@ class Sub:
 
     def drop(self):
         self.held = False
+        self.audio().play(SOUND_RELEASE, 1)
 
     def get_depth(self):
         return self.depth
@@ -70,19 +73,28 @@ class Sub:
 
         self.power_plant.set(power_usage, self.get_max_power(), self.get_normal_max_power())
         self.battery.set(self.battery_energy, self.get_max_battery())
+        for system in self.system:
+            system.set_available_power(power_availability)
 
         # speed
-        self.target_speed = self.engine().get_strength(power_availability) * MAX_ENGINE_THRUST
+        self.target_speed = self.engine().get_strength() * MAX_ENGINE_THRUST
 
         if not self.powered_up:
             if self.depth < SPACE_TO_SURFACE_DEPTH:
                 # free-falling
                 self.speed += FREEFALL_SPEED * dt
             else:
+                if not self.has_impacted:
+                    self.has_impacted = True
+                    self.audio().play(SOUND_SPLASH, 1)
+
                 self.speed -= WATERBRAKE_SPEED * dt
                 if self.speed < POWER_ON_SPEED:
                     self.speed = POWER_ON_SPEED
+                    for system in self.system:
+                        system.engage()
                     self.powered_up = True
+
         else:
             if self.speed < self.target_speed:
                 self.speed += ENGINE_SPEED_CHANGE * dt
@@ -92,7 +104,7 @@ class Sub:
         self.depth = self.depth + (self.speed * dt)
 
         # temperature
-        correct = self.climate_control().get_strength(power_availability) * MAX_CLIMATE_CONTROL_CORRECT * dt
+        correct = self.climate_control().get_strength() * MAX_CLIMATE_CONTROL_CORRECT * dt
         if self.temperature > IDEAL_TEMPERATURE:
             self.temperature -= correct
         elif self.temperature < IDEAL_TEMPERATURE:
@@ -124,7 +136,6 @@ class Sub:
 
         self.heat.set(self.temperature)
 
-
     def systems(self):
         return self.system
 
@@ -133,6 +144,9 @@ class Sub:
 
     def climate_control(self):
         return self.system[6]
+
+    def audio(self):
+        return self.system[4]
 
     def get_power_plant(self):
         return self.power_plant
