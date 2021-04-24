@@ -195,13 +195,13 @@ class Audio(SubSystem):
         self.player = SoundPlayer()
 
     def play(self, command, external_volume):
-        self.player.play_sound(command, external_volume * self.get_volume())
+        self.player.play_sound(command, external_volume)
 
     def play_repeating(self, command, external_volume):
-        self.player.play_repeating(command, external_volume * self.get_volume())
+        self.player.play_repeating(command, external_volume)
 
     def update_volume(self, command, new_volume):
-        self.player.update_volume(command,new_volume)
+        self.player.update_volume(command, new_volume)
 
     def get_volume(self):
         return self.get_strength()
