@@ -84,6 +84,9 @@ class Sub:
         # temperature
         self.get_heat().update_heat(self, self.world, dt)
 
+        # audio
+        self.audio().update_audio(self.depth)
+
     def systems(self):
         return self.system
 

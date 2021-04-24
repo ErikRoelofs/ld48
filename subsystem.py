@@ -267,6 +267,7 @@ class Audio(SubSystem):
     def __init__(self, oned, panel_color, output_color, off_color, max_power_consumption):
         super().__init__(oned, panel_color, output_color, off_color, max_power_consumption)
         self.player = SoundPlayer()
+        self.depth = 0
 
     def play(self, command, external_volume):
         self.player.play_sound(command, external_volume)
@@ -278,10 +279,17 @@ class Audio(SubSystem):
         self.player.update_volume(command, new_volume)
 
     def get_volume(self):
-        return self.get_strength()
+        strength_need = (self.depth * AUDIO_QUALITY_DROPOFF)
+        if strength_need < self.get_strength():
+            return 1
+        return self.get_strength() / strength_need
 
     def level_changed(self):
         self.player.update_global_volume(self.get_volume())
+
+    def update_audio(self, depth):
+        self.depth = depth
+        self.level_changed()
 
 class Engine(SubSystem):
 
