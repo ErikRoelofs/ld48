@@ -43,6 +43,12 @@ class Oned:
             position_end = position_start + 1
         self.items.append((drawable, position_start, position_end))
 
+    def get_mouse_position(self):
+        (x, y) = pygame.mouse.get_pos()
+        if self.direction == HORIZONTAL:
+            return x
+        if self.direction == VERTICAL:
+            return y
 
 class Drawable:
     # get the color at a percentage of the drawable's length

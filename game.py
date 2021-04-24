@@ -1,6 +1,7 @@
 import sys, pygame, random
 from oned import *
 from consts import *
+from functions import *
 from sub import Sub
 from altimeter import Altimeter
 
@@ -19,6 +20,8 @@ def main():
     panel_background = SolidLine(PANEL_COLOR)
 
     active_screen = ALTIMETER_SCREEN
+    dragging_power = False
+    dragging_system = None
 
     while True:
         for events in pygame.event.get():
@@ -33,8 +36,28 @@ def main():
                     active_screen = SYSTEM_CONTROLS_SCREEN
                 if events.key == K_3:
                     active_screen = POWER_CONTROLS_SCREEN
+            if events.type == MOUSEBUTTONDOWN:
+                if not dragging_power:
+                    pos = onedI.get_mouse_position()
+                    got = get_system_from_position(sub, pos)
+                    if got is not None:
+                        (system, position) = got
+                        dragging_system = system
+                        dragging_power = True
+            if events.type == MOUSEBUTTONUP:
+                dragging_power = False
+                dragging_system = None
 
         dt = clock.get_time() / 1000
+
+        if dragging_power:
+            if active_screen == SYSTEM_CONTROLS_SCREEN:
+                pos = onedI.get_mouse_position()
+                got = get_system_from_position(sub, pos)
+                if got is not None:
+                    (system, position) = got
+                    if system and system == dragging_system:
+                        system.set_level_from_percentage_clicked(position)
 
         # updating
         sub.update(dt)
