@@ -5,6 +5,8 @@ from consts import *
 class SoundPlayer:
     def __init__(self):
         self.global_volume = 1
+        self.static = None
+        self.play_static()
 
         self.release_sound = pygame.mixer.Sound("sounds/release.wav")
         self.splash_sound = pygame.mixer.Sound("sounds/splash.wav")
@@ -19,6 +21,14 @@ class SoundPlayer:
             self.splash_sound: 1,
             self.engine_sound: 1
         }
+
+    def play_static(self):
+        # static is a special case, so it's not in "all sounds"
+        self.static = pygame.mixer.Sound("sounds/static.wav")
+        # initially, not audible
+        self.static.set_volume(0)
+        self.static.play(-1)
+
 
     def get_sound(self, command):
         if command == SOUND_SPLASH:
@@ -50,3 +60,6 @@ class SoundPlayer:
         self.global_volume = new_global_volume
         for sound in self.all_sounds:
             sound.set_volume(self.sound_volumes[sound] * new_global_volume)
+
+    def set_static_volume(self, volume):
+        self.static.set_volume(volume)

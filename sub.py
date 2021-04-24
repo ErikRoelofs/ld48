@@ -1,6 +1,6 @@
 from oned import Point
 from consts import *
-from subsystem import SubSystem, PowerPlant, Battery, Heat, Audio, Engine
+from subsystem import SubSystem, PowerPlant, Battery, Heat, Audio, Engine, Antenna
 import random
 
 class Sub:
@@ -18,7 +18,7 @@ class Sub:
             SubSystem(oned, (0, 0, 255), (0, 0, 150), (0, 0, 0), 200),
             SubSystem(oned, (255, 255, 0), (150, 150, 0), (0, 0, 0), 200),
             audio_sys,
-            SubSystem(oned, (255, 0, 255), (150, 0, 150), (0, 0, 0), 200),
+            Antenna(oned, (255, 0, 255), (150, 0, 150), (0, 0, 0), 200),
             SubSystem(oned, (255, 255, 255), (150, 150, 150), (0, 0, 0), 200),
         ]
         self.power_plant = PowerPlant(oned)
@@ -85,7 +85,10 @@ class Sub:
         self.get_heat().update_heat(self, self.world, dt)
 
         # audio
-        self.audio().update_audio(self.depth)
+        self.audio().update_audio(self.depth, dt)
+
+        # connection
+        self.antenna().update_connection(self.depth, dt)
 
     def systems(self):
         return self.system
@@ -104,6 +107,9 @@ class Sub:
 
     def get_battery(self):
         return self.battery
+
+    def antenna(self):
+        return self.system[5]
 
     def get_max_power(self):
         if self.temperature > SUB_FREEZING_TRESHOLD:

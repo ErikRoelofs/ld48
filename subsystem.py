@@ -287,9 +287,20 @@ class Audio(SubSystem):
     def level_changed(self):
         self.player.update_global_volume(self.get_volume())
 
-    def update_audio(self, depth):
+    def update_audio(self, depth, dt):
         self.depth = depth
         self.level_changed()
+
+
+class Antenna(SubSystem):
+    def __init__(self, oned, panel_color, output_color, off_color, max_power_consumption):
+        super().__init__(oned, panel_color, output_color, off_color, max_power_consumption)
+
+        self.player = SoundPlayer()
+        self.depth = 0
+
+    def update_connection(self, depth, dt):
+        self.player.set_static_volume(depth * AUDIO_QUALITY_DROPOFF)
 
 class Engine(SubSystem):
 
