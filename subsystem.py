@@ -128,23 +128,20 @@ class PowerPlant:
         # center marker (adjusted for low power)
         self.oned.draw(self.center_marker, int(start + overcharge_length) - 1, int(start + overcharge_length) + 1)
 
-    def update_power(self, sub, battery, dt):
+    def update_power(self, power_usage, temperature, battery, dt):
         power_availability = 1
-        power_usage = 0
-        for system in sub.systems():
-            power_usage += system.get_power_consumption()
 
-        if power_usage > self.get_max_power(sub.temperature):
+        if power_usage > self.get_max_power(temperature):
             # drain batteries if possible
-            energy_used = (power_usage - self.get_max_power(sub.temperature)) * dt
+            energy_used = (power_usage - self.get_max_power(temperature)) * dt
             if not battery.decrease(energy_used):
                 # power issues! reduce availability allround
-                power_availability = self.get_max_power(sub.temperature) / power_usage
+                power_availability = self.get_max_power(temperature) / power_usage
         else:
-            energy_gained = (self.get_max_power(sub.temperature) - power_usage) * dt
+            energy_gained = (self.get_max_power(temperature) - power_usage) * dt
             battery.increase(energy_gained)
 
-        self.set(power_usage, self.get_max_power(sub.temperature), self.get_normal_max_power())
+        self.set(power_usage, self.get_max_power(temperature), self.get_normal_max_power())
         return power_availability
 
     def get_max_power(self, temperature):
@@ -214,6 +211,7 @@ class Heat:
         self.marker_ok = Point(NOTCH_COLOR)
         self.oned = oned
         self.temperature = 0
+        self.overheat_damage_counter = 0
 
     def draw(self, start, end):
         each_length = (end - start) / 5
@@ -230,9 +228,39 @@ class Heat:
         draw_percentage = 1 - (temp_offset / total_temp_span)
         self.oned.draw(self.marker_ok, start + int(draw_percentage * total_length) - 2, start + int(draw_percentage * total_length) + 2)
 
+    def get(self):
+        return self.temperature
 
-    def set(self, temperature):
-        self.temperature = temperature
+    def update_heat(self, sub, world, dt):
+        correct = sub.climate_control().get_strength() * MAX_CLIMATE_CONTROL_CORRECT * dt
+        if self.temperature > IDEAL_TEMPERATURE:
+            self.temperature -= correct
+        elif self.temperature < IDEAL_TEMPERATURE:
+            self.temperature += correct
+
+        outside_temp = world.get_temperature(sub.depth)
+        diff = abs(outside_temp - self.temperature)
+        modify = (diff * SUB_TEMPERATURE_CAPTURE) * dt
+        if outside_temp > self.temperature:
+            self.temperature += modify
+        elif outside_temp < self.temperature:
+            self.temperature -= modify
+
+        if self.temperature < MIN_TEMPERATURE:
+            self.temperature = MIN_TEMPERATURE
+        if self.temperature > MAX_TEMPERATURE:
+            self.temperature = MAX_TEMPERATURE
+
+        if self.temperature > SUB_OVERHEAT_TRESHOLD:
+            self.overheat_damage_counter += dt
+        else:
+            self.overheat_damage_counter -= dt
+
+        if self.overheat_damage_counter > 1:
+            sub.get_rand_sys().apply_damage(random.randint(0, 1000) / 100)
+            self.overheat_damage_counter -= 1
+        if self.overheat_damage_counter < 0:
+            self.overheat_damage_counter = 0
 
 
 class Audio(SubSystem):
@@ -260,6 +288,18 @@ class Engine(SubSystem):
     def __init__(self, oned, panel_color, output_color, off_color, max_power_consumption, audio):
         super().__init__(oned, panel_color, output_color, off_color, max_power_consumption)
         self.audio = audio
+        self.target_speed = 0
+        self.speed = POWER_ON_SPEED
+
+    def update_speed(self, dt):
+        self.target_speed = self.get_strength() * MAX_ENGINE_THRUST
+
+        if self.speed < self.target_speed:
+            self.speed += ENGINE_SPEED_CHANGE * dt
+        elif self.speed > self.target_speed:
+            self.speed -= ENGINE_SPEED_CHANGE * dt
+
+        return self.speed
 
     def engage(self):
         super().engage()

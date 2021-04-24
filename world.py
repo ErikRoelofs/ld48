@@ -5,4 +5,4 @@ class World:
         pass
 
     def get_temperature(self, depth):
-        return 0
+        return -400

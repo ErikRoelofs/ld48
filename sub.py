@@ -50,13 +50,14 @@ class Sub:
             return
 
         # power
-        power_availability = self.power_plant.update_power(self, self.battery, dt)
+        power_usage = 0
+        for system in self.system:
+            power_usage += system.get_power_consumption()
+        power_availability = self.power_plant.update_power(power_usage, self.heat.get(), self.battery, dt)
         for system in self.system:
             system.set_available_power(power_availability)
 
         # speed
-        self.target_speed = self.engine().get_strength() * MAX_ENGINE_THRUST
-
         if not self.powered_up:
             if self.depth < SPACE_TO_SURFACE_DEPTH:
                 # free-falling
@@ -74,48 +75,14 @@ class Sub:
                     for system in self.system:
                         system.engage()
                     self.powered_up = True
-
         else:
-            # normal operation
-            if self.speed < self.target_speed:
-                self.speed += ENGINE_SPEED_CHANGE * dt
-            elif self.speed > self.target_speed:
-                self.speed -= ENGINE_SPEED_CHANGE * dt
+            self.speed = self.engine().update_speed(dt)
 
+        # depth
         self.depth = self.depth + (self.speed * dt)
 
         # temperature
-        correct = self.climate_control().get_strength() * MAX_CLIMATE_CONTROL_CORRECT * dt
-        if self.temperature > IDEAL_TEMPERATURE:
-            self.temperature -= correct
-        elif self.temperature < IDEAL_TEMPERATURE:
-            self.temperature += correct
-
-        outside_temp = self.world.get_temperature(self.depth)
-        diff = abs(outside_temp - self.temperature)
-        modify = (diff * SUB_TEMPERATURE_CAPTURE) * dt
-        if outside_temp > self.temperature:
-            self.temperature += modify
-        elif outside_temp < self.temperature:
-            self.temperature -= modify
-
-        if self.temperature < MIN_TEMPERATURE:
-            self.temperature = MIN_TEMPERATURE
-        if self.temperature > MAX_TEMPERATURE:
-            self.temperature = MAX_TEMPERATURE
-
-        if self.temperature > SUB_OVERHEAT_TRESHOLD:
-            self.overheat_damage_counter += dt
-        else:
-            self.overheat_damage_counter -= dt
-
-        if self.overheat_damage_counter > 1:
-            self.get_rand_sys().apply_damage(random.randint(0, 1000) / 100)
-            self.overheat_damage_counter -= 1
-        if self.overheat_damage_counter < 0:
-            self.overheat_damage_counter = 0
-
-        self.heat.set(self.temperature)
+        self.get_heat().update_heat(self, self.world, dt)
 
     def systems(self):
         return self.system
