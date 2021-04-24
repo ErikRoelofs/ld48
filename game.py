@@ -30,11 +30,11 @@ def main():
             if events.type == KEYDOWN:
                 if events.key == K_SPACE and sub.is_held():
                     sub.drop()
-                if events.key == K_1:
+                if events.key == K_1 and not sub.is_held():
                     active_screen = ALTIMETER_SCREEN
-                if events.key == K_2:
+                if events.key == K_2 and not sub.is_held():
                     active_screen = SYSTEM_CONTROLS_SCREEN
-                if events.key == K_3:
+                if events.key == K_3 and not sub.is_held():
                     active_screen = POWER_CONTROLS_SCREEN
             if events.type == MOUSEBUTTONDOWN:
                 if not dragging_power:
@@ -77,6 +77,9 @@ def main():
                 )
 
         if active_screen == POWER_CONTROLS_SCREEN:
+            onedI.draw(panel_background, 0, HEIGHT)
+            sub.get_power_plant().draw(25, 300)
+            sub.get_battery().draw(325, HEIGHT - 25)
             pass
 
         onedI.show()
