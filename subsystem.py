@@ -1,6 +1,6 @@
 from oned import Point, AnimatedSolidLine, GradientLine, ArrayImage, AnimatedArrayImage
 from consts import *
-from soundplayer import play_sound, play_repeating, update_volume
+from soundplayer import SoundPlayer
 import random
 
 class SubSystem:
@@ -190,18 +190,24 @@ class Heat:
 
 
 class Audio(SubSystem):
+    def __init__(self, oned, panel_color, output_color, off_color, max_power_consumption):
+        super().__init__(oned, panel_color, output_color, off_color, max_power_consumption)
+        self.player = SoundPlayer()
 
     def play(self, command, external_volume):
-        play_sound(command, external_volume * self.get_volume())
+        self.player.play_sound(command, external_volume * self.get_volume())
 
     def play_repeating(self, command, external_volume):
-        play_repeating(command, external_volume * self.get_volume())
+        self.player.play_repeating(command, external_volume * self.get_volume())
 
     def update_volume(self, command, new_volume):
-        update_volume(command,new_volume)
+        self.player.update_volume(command,new_volume)
 
     def get_volume(self):
-        return 1
+        return self.get_strength()
+
+    def level_changed(self):
+        self.player.update_global_volume(self.get_volume())
 
 class Engine(SubSystem):
 
