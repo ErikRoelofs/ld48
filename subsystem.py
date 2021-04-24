@@ -1,5 +1,6 @@
-from oned import Point, AnimatedSolidLine, GradientLine
+from oned import Point, AnimatedSolidLine, GradientLine, ArrayImage, AnimatedArrayImage
 from consts import *
+import random
 
 class SubSystem:
 
@@ -11,6 +12,9 @@ class SubSystem:
         self.panel_size_percentage = 0.03
         self.level = 0.1
         self.max_power_consumption = max_power_consumption
+        self.damage = 0
+        self.scratches = []
+        self.static = make_static(100, 100)
 
     def draw(self, start, end):
         size = end - start
@@ -19,15 +23,25 @@ class SubSystem:
 
         # top of panel
         self.oned.draw(self.panel_color, start, start + panel_size)
-
-        # no-output level
-        self.oned.draw(self.off_color, start + panel_size, start + panel_size + int(output_height * (1 - self.level)))
-
-        # output level
-        self.oned.draw(self.output_color, start + panel_size + int(output_height * (1 - self.level)), end - panel_size)
-
         # bottom of panel
         self.oned.draw(self.panel_color, end - panel_size, end)
+
+        if self.is_broken():
+            self.oned.draw(self.static, start + panel_size, end - panel_size)
+            return
+
+        # no-output level
+        self.oned.draw(self.off_color, start + panel_size,
+                       start + panel_size + int(output_height * (1 - self.level)))
+
+        # output level
+        self.oned.draw(self.output_color, start + panel_size + int(output_height * (1 - self.level)),
+                       end - panel_size)
+
+        # draw damage scratches over the system
+        for position in self.scratches:
+            color = DAMAGE_COLORS[random.randint(0, len(DAMAGE_COLORS) - 1)]
+            self.oned.draw(Point(color), int(start + (position / 100 * size)), int(start + (position / 100 * size)) + 1)
 
     def set_level_from_percentage_clicked(self, percentage):
         # percentage is of the full draw area, but we ignore the panels
@@ -39,12 +53,23 @@ class SubSystem:
             real_percentage = 0
         self.level = 1 - real_percentage
 
-    def get_level(self, power_availability):
-        return self.level * power_availability
+    def get_strength(self, power_availability):
+        return self.level * power_availability * (1 - self.damage)
 
     def get_power_consumption(self):
         return self.level * self.max_power_consumption
 
+    def apply_damage(self, damage):
+        self.damage += damage
+        if self.damage > 1:
+            self.damage = 1
+            self.level = 0
+
+        while len(self.scratches) < self.damage * 10:
+            self.scratches.append(random.randint(0, 100))
+
+    def is_broken(self):
+        return self.damage >= 1
 
 class PowerPlant:
     def __init__(self, oned):
@@ -146,3 +171,19 @@ class Heat:
 
     def set(self, temperature):
         self.temperature = temperature
+
+
+def make_static(amount = 100, static_depth = 100):
+    images = []
+    for i in range(0, amount):
+        image = make_static_image(static_depth)
+        images.append(image)
+    return AnimatedArrayImage(images, 1)
+
+
+def make_static_image(amount = 100):
+    colors = []
+    for i in range(0, amount):
+        color = DAMAGE_COLORS[random.randint(0, len(DAMAGE_COLORS) - 1)]
+        colors.append(color)
+    return ArrayImage(colors)

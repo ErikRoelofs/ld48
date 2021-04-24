@@ -1,6 +1,7 @@
 from oned import Point
 from consts import *
 from subsystem import SubSystem, PowerPlant, Battery, Heat
+import random
 
 class Sub:
     def __init__(self, oned, world):
@@ -27,6 +28,7 @@ class Sub:
         self.temperature = -150
         self.heat = Heat(oned)
         self.world = world
+        self.overheat_damage_counter = 0
 
     def draw(self, position):
         self.oned.draw(self.graphic, position - 4, position + 4)
@@ -70,7 +72,7 @@ class Sub:
         self.battery.set(self.battery_energy, self.get_max_battery())
 
         # speed
-        self.target_speed = self.engine().get_level(power_availability) * MAX_ENGINE_THRUST
+        self.target_speed = self.engine().get_strength(power_availability) * MAX_ENGINE_THRUST
 
         if not self.powered_up:
             if self.depth < SPACE_TO_SURFACE_DEPTH:
@@ -90,7 +92,7 @@ class Sub:
         self.depth = self.depth + (self.speed * dt)
 
         # temperature
-        correct = self.climate_control().get_level(power_availability) * MAX_CLIMATE_CONTROL_CORRECT * dt
+        correct = self.climate_control().get_strength(power_availability) * MAX_CLIMATE_CONTROL_CORRECT * dt
         if self.temperature > IDEAL_TEMPERATURE:
             self.temperature -= correct
         elif self.temperature < IDEAL_TEMPERATURE:
@@ -108,6 +110,17 @@ class Sub:
             self.temperature = MIN_TEMPERATURE
         if self.temperature > MAX_TEMPERATURE:
             self.temperature = MAX_TEMPERATURE
+
+        if self.temperature > SUB_OVERHEAT_TRESHOLD:
+            self.overheat_damage_counter += dt
+        else:
+            self.overheat_damage_counter -= dt
+
+        if self.overheat_damage_counter > 1:
+            self.get_rand_sys().apply_damage(random.randint(0, 1000) / 100)
+            self.overheat_damage_counter -= 1
+        if self.overheat_damage_counter < 0:
+            self.overheat_damage_counter = 0
 
         self.heat.set(self.temperature)
 
@@ -144,3 +157,7 @@ class Sub:
 
     def get_heat(self):
         return self.heat
+
+    def get_rand_sys(self):
+        return self.system[random.randint(0, len(self.system) - 1)]
+

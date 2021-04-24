@@ -179,3 +179,19 @@ class Spinner(Drawable):
             min(255, max(0, self.color_band[1] + (self.distances[1] * distance))),
             min(255, max(0, self.color_band[2] + (self.distances[2] * distance))),
         )
+
+class AnimatedArrayImage(Drawable):
+    images = []
+
+    def __init__(self, colors, duration):
+        self.images = colors
+        self.num_images = len(self.images)
+        self.duration = duration
+
+    def colorAt(self, percentage, time):
+        print(percentage)
+        print(time)
+        print('--')
+        place = (time % self.duration) / self.duration
+        use_img = math.floor(place * self.num_images)
+        return self.images[use_img].colorAt(percentage, time)
