@@ -1,4 +1,4 @@
-from oned import Point, AnimatedSolidLine
+from oned import Point, AnimatedSolidLine, GradientLine
 from consts import *
 
 class SubSystem:
@@ -39,8 +39,8 @@ class SubSystem:
             real_percentage = 0
         self.level = 1 - real_percentage
 
-    def get_level(self):
-        return self.level
+    def get_level(self, power_availability):
+        return self.level * power_availability
 
     def get_power_consumption(self):
         return self.level * self.max_power_consumption
@@ -105,3 +105,34 @@ class Battery:
     def set(self, current, max):
         self.current = current
         self.max = max
+
+
+class Heat:
+    def __init__(self, oned):
+        self.too_hot_zone = Point(OVERHEAT_END_COLOR)
+        self.hot_zone = GradientLine(OVERHEAT_END_COLOR, GOOD_TEMPERATURE_COLOR)
+        self.green_zone = Point(GOOD_TEMPERATURE_COLOR)
+        self.cold_zone = GradientLine(GOOD_TEMPERATURE_COLOR, FREEZING_END_COLOR)
+        self.too_cold_zone = Point(FREEZING_END_COLOR)
+        self.marker_ok = Point(NOTCH_COLOR)
+        self.oned = oned
+        self.temperature = 0
+
+    def draw(self, start, end):
+        each_length = (end - start) / 5
+        self.oned.draw(self.too_hot_zone, start, int(start + each_length))
+        self.oned.draw(self.hot_zone, int(start + each_length), int(start + each_length * 2))
+        self.oned.draw(self.green_zone, int(start + each_length * 2), int(start + each_length * 3))
+        self.oned.draw(self.cold_zone, int(start + each_length * 3), int(start + each_length * 4))
+        self.oned.draw(self.too_cold_zone, int(start + each_length * 4), end)
+
+        # temperature marker
+        total_temp_span = MAX_TEMPERATURE - MIN_TEMPERATURE
+        total_length = (end - start)
+        temp_offset = self.temperature - MIN_TEMPERATURE
+        draw_percentage = 1 - (temp_offset / total_temp_span)
+        self.oned.draw(self.marker_ok, start + int(draw_percentage * total_length) - 2, start + int(draw_percentage * total_length) + 2)
+
+
+    def set(self, temperature):
+        self.temperature = temperature

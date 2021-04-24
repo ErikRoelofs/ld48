@@ -4,6 +4,7 @@ from consts import *
 from functions import *
 from sub import Sub
 from altimeter import Altimeter
+from world import World
 
 from pygame.locals import*
 
@@ -15,7 +16,8 @@ def main():
     onedI = Oned(WIDTH, HEIGHT, VERTICAL)
     altimeter = Altimeter(onedI)
     spaceship = GradientLine(SPACESHIP_COLOR_START, SPACESHIP_COLOR_END)
-    sub = Sub(onedI)
+    world = World()
+    sub = Sub(onedI, world)
 
     panel_background = SolidLine(PANEL_COLOR)
 
@@ -79,7 +81,8 @@ def main():
         if active_screen == POWER_CONTROLS_SCREEN:
             onedI.draw(panel_background, 0, HEIGHT)
             sub.get_power_plant().draw(25, 300)
-            sub.get_battery().draw(325, HEIGHT - 25)
+            sub.get_battery().draw(325, 700)
+            sub.get_heat().draw(725, HEIGHT - 25)
             pass
 
         onedI.show()

@@ -1,9 +1,9 @@
 from oned import Point
 from consts import *
-from subsystem import SubSystem, PowerPlant, Battery
+from subsystem import SubSystem, PowerPlant, Battery, Heat
 
 class Sub:
-    def __init__(self, oned):
+    def __init__(self, oned, world):
         self.oned = oned
         self.graphic = Point((200, 200, 200))
         self.held = True
@@ -24,6 +24,9 @@ class Sub:
         self.powered_up = False
         self.power_use = 0
         self.battery_energy = 0
+        self.temperature = 0
+        self.heat = Heat(oned)
+        self.world = world
 
     def draw(self, position):
         self.oned.draw(self.graphic, position - 4, position + 4)
@@ -41,8 +44,33 @@ class Sub:
         if self.held:
             return
 
+        # power
+        power_availability = 1
+        power_usage = 0
+        for system in self.systems():
+            power_usage += system.get_power_consumption()
+
+        if power_usage > self.get_max_power():
+            # drain batteries if possible
+            energy_used = (power_usage - self.get_max_power()) * dt
+            if energy_used < self.battery_energy:
+                self.battery_energy -= energy_used
+            else:
+                # power issues! reduce availability allround
+                self.battery_energy = 0
+                power_availability = self.get_max_power() / power_usage
+                pass
+        else:
+            energy_gained = (self.get_max_power() - power_usage) * dt
+            self.battery_energy += energy_gained
+            if self.battery_energy > self.get_max_battery():
+                self.battery_energy = self.get_max_battery()
+
+        self.power_plant.set(power_usage, self.get_max_power())
+        self.battery.set(self.battery_energy, self.get_max_battery())
+
         # speed
-        self.target_speed = self.engine().get_level() * MAX_ENGINE_THRUST
+        self.target_speed = self.engine().get_level(power_availability) * MAX_ENGINE_THRUST
 
         if not self.powered_up:
             if self.depth < SPACE_TO_SURFACE_DEPTH:
@@ -61,34 +89,31 @@ class Sub:
 
         self.depth = self.depth + (self.speed * dt)
 
-        # power
-        power_usage = 0
-        for system in self.systems():
-            power_usage += system.get_power_consumption()
+        # temperature
+        correct = self.climate_control().get_level(power_availability) * MAX_CLIMATE_CONTROL_CORRECT * dt
+        if self.temperature > IDEAL_TEMPERATURE:
+            self.temperature -= correct
+        elif self.temperature < IDEAL_TEMPERATURE:
+            self.temperature += correct
 
-        if power_usage > self.get_max_power():
-            # drain batteries if possible
-            energy_used = (power_usage - self.get_max_power()) * dt
-            if energy_used < self.battery_energy:
-                self.battery_energy -= energy_used
-            else:
-                # power issues!
-                self.battery_energy = 0
-                pass
-        else:
-            energy_gained = (self.get_max_power() - power_usage) * dt
-            self.battery_energy += energy_gained
-            if self.battery_energy > self.get_max_battery():
-                self.battery_energy = self.get_max_battery()
+        outside_temp = self.world.get_temperature(self.depth)
+        diff = abs(outside_temp - self.temperature)
+        modify = (diff * SUB_TEMPERATURE_CAPTURE) * dt
+        if outside_temp > self.temperature:
+            self.temperature += modify
+        elif outside_temp < self.temperature:
+            self.temperature -= modify
+        self.heat.set(self.temperature)
 
-        self.power_plant.set(power_usage, self.get_max_power())
-        self.battery.set(self.battery_energy, self.get_max_battery())
 
     def systems(self):
         return self.system
 
     def engine(self):
         return self.system[0]
+
+    def climate_control(self):
+        return self.system[6]
 
     def get_power_plant(self):
         return self.power_plant
@@ -101,3 +126,6 @@ class Sub:
 
     def get_max_battery(self):
         return MAX_BATTERY_CAPACITY
+
+    def get_heat(self):
+        return self.heat
