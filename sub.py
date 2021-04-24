@@ -50,29 +50,7 @@ class Sub:
             return
 
         # power
-        power_availability = 1
-        power_usage = 0
-        for system in self.systems():
-            power_usage += system.get_power_consumption()
-
-        if power_usage > self.get_max_power():
-            # drain batteries if possible
-            energy_used = (power_usage - self.get_max_power()) * dt
-            if energy_used < self.battery_energy:
-                self.battery_energy -= energy_used
-            else:
-                # power issues! reduce availability allround
-                self.battery_energy = 0
-                power_availability = self.get_max_power() / power_usage
-                pass
-        else:
-            energy_gained = (self.get_max_power() - power_usage) * dt
-            self.battery_energy += energy_gained
-            if self.battery_energy > self.get_max_battery():
-                self.battery_energy = self.get_max_battery()
-
-        self.power_plant.set(power_usage, self.get_max_power(), self.get_normal_max_power())
-        self.battery.set(self.battery_energy, self.get_max_battery())
+        power_availability = self.power_plant.update_power(self, self.battery, dt)
         for system in self.system:
             system.set_available_power(power_availability)
 
@@ -84,10 +62,12 @@ class Sub:
                 # free-falling
                 self.speed += FREEFALL_SPEED * dt
             else:
+                # impact splash
                 if not self.has_impacted:
                     self.has_impacted = True
                     self.audio().play(SOUND_SPLASH, 1)
 
+                # waterbreaking before the power goes on
                 self.speed -= WATERBRAKE_SPEED * dt
                 if self.speed < POWER_ON_SPEED:
                     self.speed = POWER_ON_SPEED
@@ -96,6 +76,7 @@ class Sub:
                     self.powered_up = True
 
         else:
+            # normal operation
             if self.speed < self.target_speed:
                 self.speed += ENGINE_SPEED_CHANGE * dt
             elif self.speed > self.target_speed:

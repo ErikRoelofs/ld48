@@ -128,6 +128,37 @@ class PowerPlant:
         # center marker (adjusted for low power)
         self.oned.draw(self.center_marker, int(start + overcharge_length) - 1, int(start + overcharge_length) + 1)
 
+    def update_power(self, sub, battery, dt):
+        power_availability = 1
+        power_usage = 0
+        for system in sub.systems():
+            power_usage += system.get_power_consumption()
+
+        if power_usage > self.get_max_power(sub.temperature):
+            # drain batteries if possible
+            energy_used = (power_usage - self.get_max_power(sub.temperature)) * dt
+            if not battery.decrease(energy_used):
+                # power issues! reduce availability allround
+                power_availability = self.get_max_power(sub.temperature) / power_usage
+        else:
+            energy_gained = (self.get_max_power(sub.temperature) - power_usage) * dt
+            battery.increase(energy_gained)
+
+        self.set(power_usage, self.get_max_power(sub.temperature), self.get_normal_max_power())
+        return power_availability
+
+    def get_max_power(self, temperature):
+        if temperature > SUB_FREEZING_TRESHOLD:
+            return MAX_POWER_PRODUCTION
+        max_power_loss = abs(MIN_TEMPERATURE - SUB_FREEZING_TRESHOLD)
+        below_treshold = SUB_FREEZING_TRESHOLD - temperature
+        percentage = below_treshold / max_power_loss
+        power_cut = percentage * MAX_POWER_PRODUCTION_LOSS_PERCENTAGE
+        return MAX_POWER_PRODUCTION * (1 - power_cut)
+
+    def get_normal_max_power(self):
+        return MAX_POWER_PRODUCTION
+
     def set(self, current, current_max, max):
         self.current = current
         self.current_max = current_max
@@ -140,8 +171,10 @@ class Battery:
         self.flashing = AnimatedSolidLine(BATTERY_EMPTY, BATTERY_FLASH, 1)
         self.oned = oned
         self.current = 0
-        self.max = 1
+        self.max = self.get_max_battery()
 
+    def get_max_battery(self):
+        return MAX_BATTERY_CAPACITY
 
     def draw(self, start, end):
         if self.current > 0:
@@ -153,9 +186,22 @@ class Battery:
             # drained; flash warnings
             self.oned.draw(self.flashing, start, end)
 
-    def set(self, current, max):
+    def set(self, current):
         self.current = current
-        self.max = max
+
+    def increase(self, amount):
+        self.current += amount
+        if self.current > self.max:
+            self.current = self.max
+            return False
+        return True
+
+    def decrease(self, amount):
+        self.current -= amount
+        if self.current < 0:
+            self.current = 0
+            return False
+        return True
 
 
 class Heat:
