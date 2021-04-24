@@ -2,6 +2,7 @@ import sys, pygame, random
 from oned import *
 from consts import *
 from sub import Sub
+from altimeter import Altimeter
 
 from pygame.locals import*
 
@@ -12,6 +13,7 @@ clock = pygame.time.Clock()
 def main():
     onedI = Oned(WIDTH, HEIGHT, VERTICAL)
     background = GradientLine(BACKGROUND_SEA_START, BACKGROUND_SEA_END)
+    altimeter = Altimeter(onedI)
     spaceship = GradientLine(SPACESHIP_COLOR_START, SPACESHIP_COLOR_END)
     sub = Sub(onedI)
 
@@ -30,7 +32,7 @@ def main():
 
         # drawing
         onedI.draw(spaceship, 0, 20)
-        onedI.draw(background, 200, HEIGHT + 200)
+        altimeter.draw()
         sub.draw(int(sub.get_depth()))
         onedI.show()
         clock.tick()
