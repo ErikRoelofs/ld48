@@ -24,7 +24,7 @@ class Sub:
         self.powered_up = False
         self.power_use = 0
         self.battery_energy = 0
-        self.temperature = 0
+        self.temperature = -150
         self.heat = Heat(oned)
         self.world = world
 
@@ -66,7 +66,7 @@ class Sub:
             if self.battery_energy > self.get_max_battery():
                 self.battery_energy = self.get_max_battery()
 
-        self.power_plant.set(power_usage, self.get_max_power())
+        self.power_plant.set(power_usage, self.get_max_power(), self.get_normal_max_power())
         self.battery.set(self.battery_energy, self.get_max_battery())
 
         # speed
@@ -103,6 +103,12 @@ class Sub:
             self.temperature += modify
         elif outside_temp < self.temperature:
             self.temperature -= modify
+
+        if self.temperature < MIN_TEMPERATURE:
+            self.temperature = MIN_TEMPERATURE
+        if self.temperature > MAX_TEMPERATURE:
+            self.temperature = MAX_TEMPERATURE
+
         self.heat.set(self.temperature)
 
 
@@ -122,6 +128,15 @@ class Sub:
         return self.battery
 
     def get_max_power(self):
+        if self.temperature > SUB_FREEZING_TRESHOLD:
+            return MAX_POWER_PRODUCTION
+        max_power_loss = abs(MIN_TEMPERATURE - SUB_FREEZING_TRESHOLD)
+        below_treshold = SUB_FREEZING_TRESHOLD - self.temperature
+        percentage = below_treshold / max_power_loss
+        power_cut = percentage * MAX_POWER_PRODUCTION_LOSS_PERCENTAGE
+        return MAX_POWER_PRODUCTION * (1 - power_cut)
+
+    def get_normal_max_power(self):
         return MAX_POWER_PRODUCTION
 
     def get_max_battery(self):

@@ -53,33 +53,43 @@ class PowerPlant:
         self.charging_color = Point(POWER_PLANT_CHARGING)
         self.overload_color = Point(POWER_PLANT_OVERLOAD)
         self.excessive_load = AnimatedSolidLine(POWER_PLANT_UNUSED, POWER_PLANT_OVERLOAD, 1)
+        self.frost_color = Point((100, 100, 255))
         self.center_marker = Point(NOTCH_COLOR)
         self.oned = oned
         self.current = 0
+        self.current_max = 1
         self.max = 1
 
     def draw(self, start, end):
-        percentage = self.current / self.max
-        length = (end - start) / 2
-        if self.current < self.max:
-            self.oned.draw(self.unused_color, start, int(start + length))
-            self.oned.draw(self.charging_color, int(start + length), int(start + length + (1 - percentage) * length))
-            self.oned.draw(self.color, int(start + length + (1 - percentage) * length), end)
+        percentage = self.current / self.current_max
+        available_production = self.current_max / self.max
+        half = ((end - start) / 2)
+        production_length = half * available_production
+        overcharge_length = half
+        frost_length = (half * (1 - (available_production)))
+        if frost_length > 0:
+            self.oned.draw(self.frost_color, start, int(start + frost_length))
+            start = int(start + frost_length)
+        if self.current < self.current_max:
+            self.oned.draw(self.unused_color, start, int(start + overcharge_length))
+            self.oned.draw(self.charging_color, int(start + overcharge_length), int(start + overcharge_length + (1 - percentage) * production_length))
+            self.oned.draw(self.color, int(start + overcharge_length + (1 - percentage) * production_length), end)
         else:
             overload = percentage - 1
             if overload > 1:
-                self.oned.draw(self.excessive_load, start, int(start + length))
+                self.oned.draw(self.excessive_load, start, int(start + overcharge_length))
                 pass
             else:
-                self.oned.draw(self.unused_color, int(start), int(start + (1 - overload) * length))
-                self.oned.draw(self.overload_color, int(start + (1 - overload) * length), int(end))
-            self.oned.draw(self.color, int(start + length), int(end))
+                self.oned.draw(self.unused_color, int(start), int(start + (1 - overload) * overcharge_length))
+                self.oned.draw(self.overload_color, int(start + (1 - overload) * overcharge_length), int(end))
+            self.oned.draw(self.color, int(start + overcharge_length), int(end))
 
-        # center marker
-        self.oned.draw(self.center_marker, int(start + length) - 1, int(start + length) + 1)
+        # center marker (adjusted for low power)
+        self.oned.draw(self.center_marker, int(start + overcharge_length) - 1, int(start + overcharge_length) + 1)
 
-    def set(self, current, max):
+    def set(self, current, current_max, max):
         self.current = current
+        self.current_max = current_max
         self.max = max
 
 class Battery:
