@@ -310,7 +310,7 @@ class StrangeNoisy1(Biome):
 
     @staticmethod
     def min_depth_required():
-        return 1500
+        return 3500
 
     @staticmethod
     def science_color():
@@ -334,7 +334,7 @@ class StrangeNoisy2(Biome):
 
     @staticmethod
     def min_depth_required():
-        return 1000
+        return 1900
 
     @staticmethod
     def science_color():
@@ -358,7 +358,7 @@ class SonarVisible1(Biome):
 
     @staticmethod
     def min_depth_required():
-        return 800
+        return 1400
 
     @staticmethod
     def science_color():
@@ -382,7 +382,7 @@ class SonarVisible2(Biome):
 
     @staticmethod
     def min_depth_required():
-        return 1400
+        return 4000
 
     @staticmethod
     def science_color():
@@ -411,7 +411,7 @@ class DragonBiome(Biome):
 
     @staticmethod
     def min_depth_required():
-        return 1700
+        return 4500
 
     def get_sound(self):
         return SOUND_DRAGON
@@ -506,7 +506,7 @@ class CrabBiome(Biome):
 
     @staticmethod
     def min_depth_required():
-        return 1700
+        return 3200
 
     def get_sound(self):
         return SOUND_CRAB
@@ -601,7 +601,7 @@ class CowBiome(Biome):
 
     @staticmethod
     def min_depth_required():
-        return 1700
+        return 2600
 
     def get_sound(self):
         return SOUND_COW

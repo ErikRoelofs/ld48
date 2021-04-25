@@ -112,7 +112,6 @@ class Sub:
 
         # score science
         self.score += self.science().update_science(dt, self.depth, self.world)
-
         return True
 
     def noise(self):
