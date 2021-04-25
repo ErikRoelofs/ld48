@@ -21,7 +21,7 @@ def main():
     world = World()
     sonar = []
     sub = Sub(onedI, world, sonar)
-    altimeter = Altimeter(onedI, sonar)
+    altimeter = Altimeter(onedI, sonar, world)
 
     panel_background = SolidLine(PANEL_COLOR)
 
@@ -71,9 +71,11 @@ def main():
             game_end(sub.score)
 
         world.update_world(sub.depth, dt)
+        altimeter.update(dt)
 
         for ping in sonar:
             ping.update_sonar(dt)
+            altimeter.reveal(ping.get_depth())
             if not ping.still_active():
                 sonar.remove(ping)
 

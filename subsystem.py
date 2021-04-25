@@ -70,7 +70,7 @@ class SubSystem:
             self.level_changed()
 
     def get_strength(self):
-        return self.level * self.power_availability * (1 - self.damage)
+        return self.level * self.power_availability * ((2 - self.damage) / 2)
 
     def get_power_consumption(self):
         return self.level * self.max_power_consumption
@@ -328,7 +328,7 @@ class Engine(SubSystem):
         self.speed = POWER_ON_SPEED
 
     def update_speed(self, dt):
-        self.target_speed = (1 + self.get_strength() / 2) * MAX_ENGINE_THRUST
+        self.target_speed = self.get_strength() * MAX_ENGINE_THRUST
 
         if self.speed < self.target_speed:
             self.speed += ENGINE_SPEED_CHANGE * dt
