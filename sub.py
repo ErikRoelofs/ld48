@@ -1,6 +1,6 @@
 from oned import Point
 from consts import *
-from subsystem import SubSystem, PowerPlant, Battery, Heat, Audio, Engine, Antenna
+from subsystem import SubSystem, PowerPlant, Battery, Heat, Audio, Engine, Antenna, EvasiveEngine
 import random
 
 class Sub:
@@ -14,7 +14,7 @@ class Sub:
         audio_sys = Audio(oned, (0, 255, 255), (0, 150, 150), (0, 0, 0), 200)
         self.system = [
             Engine(oned, (255, 0, 0), (150, 0, 0), (0, 0, 0), 200, audio_sys),
-            SubSystem(oned, (0, 255, 0), (0, 150, 0), (0, 0, 0), 200),
+            EvasiveEngine(oned, (0, 255, 0), (0, 150, 0), (0, 0, 0), 200, audio_sys),
             SubSystem(oned, (0, 0, 255), (0, 0, 150), (0, 0, 0), 200),
             SubSystem(oned, (255, 255, 0), (150, 150, 0), (0, 0, 0), 200),
             audio_sys,
@@ -33,6 +33,7 @@ class Sub:
         self.has_impacted = False
         self.connection_down = 0
         self.score = 0
+        self.collision_check = 0
 
     def draw(self, position):
         self.oned.draw(self.graphic, position - 4, position + 4)
@@ -101,6 +102,12 @@ class Sub:
         if self.connection_down > 4:
             return False
 
+        # collisions
+        self.collision_check += dt
+        if self.collision_check > 1:
+            self.collision_check -= 1
+            self.evasive_engine().check_collision(self.world, self)
+
         return True
 
     def systems(self):
@@ -108,6 +115,9 @@ class Sub:
 
     def engine(self):
         return self.system[0]
+
+    def evasive_engine(self):
+        return self.system[1]
 
     def climate_control(self):
         return self.system[6]

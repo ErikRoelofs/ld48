@@ -27,6 +27,8 @@ class Oned:
             length = position_end - position_start
 
             for i in range(position_start, position_end):
+                if not 0 <= i <= self.get_max_pos():
+                    continue
                 color = drawable.colorAt((i - position_start) / length, pygame.time.get_ticks() / 1000)
                 # no alpha support :(
                 if len(color) == 3 or color[3] == 255:
@@ -38,9 +40,20 @@ class Oned:
         pygame.display.flip()
         self.items = []
 
+    def get_max_pos(self):
+        if self.direction == HORIZONTAL:
+            return self.width
+        if self.direction == VERTICAL:
+            return self.height
+
+
     def draw(self, drawable, position_start, position_end=None):
         if position_end is None:
             position_end = position_start + 1
+        if isinstance(position_start, float):
+            raise ValueError("Position start is a float: " + str(position_start))
+        if isinstance(position_end, float):
+            raise ValueError("Position end is a float: " + str(position_end))
         self.items.append((drawable, position_start, position_end))
 
     def get_mouse_position(self):

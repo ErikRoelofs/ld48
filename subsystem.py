@@ -301,7 +301,7 @@ class Antenna(SubSystem):
         self.depth = 0
 
     def get_static_strength(self, world, depth):
-        strength_need = (self.depth * AUDIO_QUALITY_DROPOFF) + world.get_static_interference(depth)
+        strength_need = (depth * AUDIO_QUALITY_DROPOFF) + world.get_static_interference(depth)
         if strength_need == 0:
             return 0
         if strength_need < self.get_strength():
@@ -336,3 +336,37 @@ class Engine(SubSystem):
     def level_changed(self):
         super().level_changed()
         self.audio.update_volume(SOUND_ENGINE, self.get_strength())
+
+
+class EvasiveEngine(SubSystem):
+
+    def __init__(self, oned, panel_color, output_color, off_color, max_power_consumption, audio):
+        super().__init__(oned, panel_color, output_color, off_color, max_power_consumption)
+        self.audio = audio
+
+    def check_collision(self, world, sub):
+        # check how crowded the area is
+        nearby_objects = world.get_nearby_objects(sub.get_depth())
+        # speed increases chances of impact
+        nearby_objects *= (sub.speed / MAX_ENGINE_THRUST)
+        # evasive maneauvres reduce chances of impact
+        nearby_objects *= (1 - self.get_strength())
+
+        if random.randint(0, 100) < (nearby_objects * 100):
+            self.resolve_collision(world, sub)
+
+    def resolve_collision(self, world, sub):
+        # mass & speed modify impact damage
+        impact_damage = world.get_nearby_object_mass(sub.get_depth()) * (sub.speed / MAX_ENGINE_THRUST)
+        # final result is random between 10% and 100% of the max damage
+        damage = (random.randint(10, 100) / 100) * impact_damage
+        sub.get_rand_sys().apply_damage(damage)
+        # play a random bonk sound, using the damage as loudness
+        self.audio.play(SOUND_IMPACT_RANDOM, damage)
+
+    def engage(self):
+        super().engage()
+
+    def level_changed(self):
+        super().level_changed()
+

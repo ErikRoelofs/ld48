@@ -1,5 +1,6 @@
 import pygame
 from consts import *
+import random
 
 
 class SoundPlayer:
@@ -13,13 +14,22 @@ class SoundPlayer:
         self.splash_sound.fadeout(1500)
         self.engine_sound = pygame.mixer.Sound("sounds/engine.wav")
 
+        self.impact1 = pygame.mixer.Sound("sounds/impacts/impact1.wav")
+        self.impact2 = pygame.mixer.Sound("sounds/impacts/impact2.wav")
+        self.impact3 = pygame.mixer.Sound("sounds/impacts/impact3.wav")
+        self.impact4 = pygame.mixer.Sound("sounds/impacts/impact4.wav")
+
         self.all_sounds = [
             self.release_sound, self.splash_sound, self.engine_sound
         ]
         self.sound_volumes = {
             self.release_sound: 1,
             self.splash_sound: 1,
-            self.engine_sound: 1
+            self.engine_sound: 1,
+            self.impact1: 1,
+            self.impact2: 1,
+            self.impact3: 1,
+            self.impact4: 1,
         }
 
     def play_static(self):
@@ -37,6 +47,17 @@ class SoundPlayer:
             return self.release_sound
         if command == SOUND_ENGINE:
             return self.engine_sound
+        if command == SOUND_IMPACT_RANDOM:
+            sound = random.randint(1, 4)
+            if sound == 1:
+                return self.impact1
+            if sound == 2:
+                return self.impact2
+            if sound == 3:
+                return self.impact3
+            if sound == 4:
+                return self.impact4
+
         raise ValueError("No sound for: " + str(command))
 
     def play_sound(self, command, volume):

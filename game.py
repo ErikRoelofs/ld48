@@ -1,10 +1,11 @@
-import sys, pygame, random
+import pygame
+import sys
+from soundplayer import SoundPlayer
 
 pygame.init()
 clock = pygame.time.Clock()
 
 from oned import *
-from consts import *
 from functions import *
 from sub import Sub
 from altimeter import Altimeter
@@ -66,14 +67,17 @@ def main():
         # updating
         if not sub.update(dt):
             # game over.
-            pygame.mixer.stop()
             game_end(sub.score)
 
         # drawing
         if active_screen == ALTIMETER_SCREEN:
             onedI.draw(spaceship, 0, 20)
-            altimeter.draw()
-            sub.draw(int(sub.get_depth()))
+            altimeter.draw(sub.get_depth())
+            if sub.get_depth() < HEIGHT / 2:
+                sub.draw(int(sub.get_depth()))
+            else:
+                sub.draw(int(HEIGHT / 2))
+
 
         if active_screen == SYSTEM_CONTROLS_SCREEN:
             onedI.draw(panel_background, 0, HEIGHT)
@@ -101,6 +105,9 @@ def game_end(final_score):
     showed_static = 0
     static_image = make_static(100, 400)
     tick_speed = 10
+    sound = SoundPlayer()
+    sound.set_static_volume(1)
+    switched = False
     while True:
         for events in pygame.event.get():
             if events.type == QUIT:
@@ -115,7 +122,10 @@ def game_end(final_score):
             showed_static += dt
             onedI.draw(static_image, 0, HEIGHT)
         else:
-            tick_speed = 50
+            if switched == False:
+                pygame.mixer.stop()
+                tick_speed = 50
+                switched = True
             # update score drawer
             if score_drawn < final_score:
                 score_draw_speed += dt * 200
