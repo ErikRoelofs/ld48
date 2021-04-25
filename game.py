@@ -70,7 +70,7 @@ def main():
             # game over.
             game_end(sub.score)
 
-        world.update_world(sub.depth, dt)
+        world.update_world(sub.depth, sub, dt)
         altimeter.update(dt)
 
         for ping in sonar:

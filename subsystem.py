@@ -76,14 +76,17 @@ class SubSystem:
         return self.level * self.max_power_consumption
 
     def apply_damage(self, damage):
+        overflow = 0
         self.damage += damage
         if self.damage > 1:
+            overflow = self.damage - 1
             self.damage = 1
             self.level = 0
 
         while len(self.scratches) < self.damage * 10:
             self.scratches.append(random.randint(0, 100))
         self.level_changed()
+        return overflow
 
     def is_broken(self):
         return self.damage >= 1
@@ -357,20 +360,24 @@ class EvasiveEngine(SubSystem):
     def check_collision(self, world, sub):
         # check how crowded the area is
         nearby_objects = world.get_nearby_objects(sub.get_depth())
-        # speed increases chances of impact
-        nearby_objects *= (sub.speed / MAX_ENGINE_THRUST)
+        # speed increases chances of impact; as does a moving object
+        nearby_objects *= ((sub.speed / MAX_ENGINE_THRUST) + world.get_nearby_object_speed(sub.get_depth))
         # evasive maneauvres reduce chances of impact
-        nearby_objects *= (1 - self.get_strength())
+        nearby_objects *= max((1 - self.get_strength()), 0.05)
 
         if random.randint(0, 100) < (nearby_objects * 100):
             self.resolve_collision(world, sub)
 
     def resolve_collision(self, world, sub):
+        max_hits = 4
         # mass & speed modify impact damage
-        impact_damage = world.get_nearby_object_mass(sub.get_depth()) * (sub.speed / MAX_ENGINE_THRUST)
+        impact_damage = world.get_nearby_object_mass(sub.get_depth()) * ((sub.speed / MAX_ENGINE_THRUST) + world.get_nearby_object_speed(sub.get_depth))
         # final result is random between 10% and 100% of the max damage
         damage = (random.randint(10, 100) / 100) * impact_damage
-        sub.get_rand_sys().apply_damage(damage)
+        overflow = sub.get_rand_sys().apply_damage(damage)
+        while max_hits > 0 and overflow > 0:
+            max_hits -= 1
+            overflow = sub.get_rand_sys().apply_damage(damage)
         # play a random bonk sound, using the damage as loudness
         self.audio.play(SOUND_IMPACT_RANDOM, damage)
 

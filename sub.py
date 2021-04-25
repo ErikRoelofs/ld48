@@ -115,6 +115,9 @@ class Sub:
 
         return True
 
+    def noise(self):
+        return (self.engine().get_strength() + self.evasive_engine().get_strength() + self.sonar().get_strength()) / 3
+
     def systems(self):
         return self.system
 

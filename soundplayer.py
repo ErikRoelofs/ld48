@@ -24,7 +24,7 @@ class SoundPlayer:
         self.hotspot = pygame.mixer.Sound("sounds/boiling.wav")
         self.weird1 = pygame.mixer.Sound("sounds/weirdness1.wav")
         self.weird2 = pygame.mixer.Sound("sounds/weirdness2.wav")
-
+        self.dragon = pygame.mixer.Sound("sounds/creatures/dragon.wav")
         self.sonar = pygame.mixer.Sound("sounds/sonar.wav")
 
         self.all_sounds = [
@@ -40,7 +40,8 @@ class SoundPlayer:
             self.coldspot,
             self.sonar,
             self.weird1,
-            self.weird2
+            self.weird2,
+            self.dragon,
         ]
         self.sound_volumes = {
             self.release_sound: 1,
@@ -55,7 +56,8 @@ class SoundPlayer:
             self.hotspot: 1,
             self.sonar: 1,
             self.weird1: 1,
-            self.weird2: 1
+            self.weird2: 1,
+            self.dragon: 1
         }
 
     def play_static(self):
@@ -91,10 +93,12 @@ class SoundPlayer:
             return self.coldspot
         if command == SOUND_SONAR:
             return self.sonar
-        if command == SOUNDS_WEIRD1:
+        if command == SOUND_WEIRD1:
             return self.weird1
-        if command == SOUNDS_WEIRD2:
+        if command == SOUND_WEIRD2:
             return self.weird2
+        if command == SOUND_DRAGON:
+            return self.dragon
 
         raise ValueError("No sound for: " + str(command))
 
@@ -133,3 +137,4 @@ class SoundPlayer:
 
     def set_static_volume(self, volume):
         self.static.set_volume(volume)
+
