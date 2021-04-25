@@ -17,10 +17,11 @@ from pygame.locals import*
 onedI = Oned(WIDTH, HEIGHT, VERTICAL)
 
 def main():
-    altimeter = Altimeter(onedI)
     spaceship = GradientLine(SPACESHIP_COLOR_START, SPACESHIP_COLOR_END)
     world = World()
-    sub = Sub(onedI, world)
+    sonar = []
+    sub = Sub(onedI, world, sonar)
+    altimeter = Altimeter(onedI, sonar)
 
     panel_background = SolidLine(PANEL_COLOR)
 
@@ -71,6 +72,11 @@ def main():
 
         world.update_world(sub.depth, dt)
 
+        for ping in sonar:
+            ping.update_sonar(dt)
+            if not ping.still_active():
+                sonar.remove(ping)
+
         # drawing
         if active_screen == ALTIMETER_SCREEN:
             onedI.draw(spaceship, 0, 20)
@@ -79,7 +85,6 @@ def main():
                 sub.draw(int(sub.get_depth()))
             else:
                 sub.draw(int(HEIGHT / 2))
-
 
         if active_screen == SYSTEM_CONTROLS_SCREEN:
             onedI.draw(panel_background, 0, HEIGHT)

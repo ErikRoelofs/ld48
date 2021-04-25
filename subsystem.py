@@ -328,7 +328,7 @@ class Engine(SubSystem):
         self.speed = POWER_ON_SPEED
 
     def update_speed(self, dt):
-        self.target_speed = self.get_strength() * MAX_ENGINE_THRUST
+        self.target_speed = (1 + self.get_strength() / 2) * MAX_ENGINE_THRUST
 
         if self.speed < self.target_speed:
             self.speed += ENGINE_SPEED_CHANGE * dt
@@ -378,3 +378,51 @@ class EvasiveEngine(SubSystem):
     def level_changed(self):
         super().level_changed()
 
+
+class Sonar(SubSystem):
+
+    def __init__(self, oned, panel_color, output_color, off_color, max_power_consumption, audio, sonar_pings):
+        super().__init__(oned, panel_color, output_color, off_color, max_power_consumption)
+        self.audio = audio
+        self.charge = 0
+        self.sonar_pings = sonar_pings
+        self.oned = oned
+
+    def update_sonar(self, depth, dt):
+        if self.get_strength() == 0:
+            return
+        self.charge += dt * ((1 + self.get_strength()) / 2)
+        if self.charge >= SONAR_CHARGE_TIME:
+            self.ping(depth)
+            self.charge -= SONAR_CHARGE_TIME
+
+    def ping(self, depth):
+        self.audio.play(SOUND_SONAR, self.get_strength())
+        self.sonar_pings.append(SonarPing((1 + self.get_strength()), depth, self.oned))
+
+    def engage(self):
+        super().engage()
+
+    def level_changed(self):
+        super().level_changed()
+
+
+class SonarPing:
+    def __init__(self, strength, depth, oned):
+        self.strength = strength
+        self.depth = depth
+        self.color = Point(SONAR_COLOR)
+        self.oned = oned
+
+    def get_depth(self):
+        return self.depth
+
+    def draw(self, position):
+        self.oned.draw(self.color, position)
+
+    def update_sonar(self, dt):
+        self.depth += SONAR_SPEED * dt
+        self.strength -= (dt * 0.66)
+
+    def still_active(self):
+        return self.strength > 0

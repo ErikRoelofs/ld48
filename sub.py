@@ -1,10 +1,10 @@
 from oned import Point
 from consts import *
-from subsystem import SubSystem, PowerPlant, Battery, Heat, Audio, Engine, Antenna, EvasiveEngine
+from subsystem import SubSystem, PowerPlant, Battery, Heat, Audio, Engine, Antenna, EvasiveEngine, Sonar
 import random
 
 class Sub:
-    def __init__(self, oned, world):
+    def __init__(self, oned, world, sonar):
         self.oned = oned
         self.graphic = Point((200, 200, 200))
         self.held = True
@@ -16,7 +16,7 @@ class Sub:
             Engine(oned, (255, 0, 0), (150, 0, 0), (0, 0, 0), 200, audio_sys),
             EvasiveEngine(oned, (0, 255, 0), (0, 150, 0), (0, 0, 0), 200, audio_sys),
             SubSystem(oned, (0, 0, 255), (0, 0, 150), (0, 0, 0), 200),
-            SubSystem(oned, (255, 255, 0), (150, 150, 0), (0, 0, 0), 200),
+            Sonar(oned, (255, 255, 0), (150, 150, 0), (0, 0, 0), 200, audio_sys, sonar),
             audio_sys,
             Antenna(oned, (255, 0, 255), (150, 0, 150), (0, 0, 0), 200),
             SubSystem(oned, (255, 255, 255), (150, 150, 150), (0, 0, 0), 200),
@@ -101,6 +101,9 @@ class Sub:
         if self.connection_down > 4:
             return False
 
+        # sonar
+        self.sonar().update_sonar(self.get_depth(), dt)
+
         # collisions
         self.collision_check += dt
         if self.collision_check > 1:
@@ -117,6 +120,9 @@ class Sub:
 
     def evasive_engine(self):
         return self.system[1]
+
+    def sonar(self):
+        return self.system[3]
 
     def climate_control(self):
         return self.system[6]
