@@ -73,7 +73,7 @@ class World:
         if depth < SPACE_TO_SURFACE_DEPTH:
             return MIN_TEMPERATURE
 
-        base_temperature = 150 + (depth / 3)
+        base_temperature = 150
         for biome in self.biomes:
             base_temperature += (biome.temperature_flat_change() * biome.strength(depth))
         for biome in self.biomes:
