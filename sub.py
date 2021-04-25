@@ -132,3 +132,9 @@ class Sub:
     def get_rand_sys(self):
         return self.system[random.randint(0, len(self.system) - 1)]
 
+    def draw_static_interference(self):
+        strength = self.antenna().get_static_strength(self.world, self.depth)
+        broken_signals = int(strength * 25)
+        for i in range(1, broken_signals):
+            pos = random.randint(0, HEIGHT)
+            self.oned.draw(Point(DAMAGE_COLORS[random.randint(1, len(DAMAGE_COLORS) -1)]), pos, pos+1)

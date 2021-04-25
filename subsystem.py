@@ -299,7 +299,7 @@ class Antenna(SubSystem):
         self.player = SoundPlayer()
         self.depth = 0
 
-    def get_static_volume(self, world, depth):
+    def get_static_strength(self, world, depth):
         strength_need = (self.depth * AUDIO_QUALITY_DROPOFF) + world.get_static_interference(depth)
         if strength_need == 0:
             return 0
@@ -308,7 +308,7 @@ class Antenna(SubSystem):
         return 1 - (self.get_strength() / strength_need)
 
     def update_connection(self, world, depth, dt):
-        self.player.set_static_volume(self.get_static_volume(world, depth))
+        self.player.set_static_volume(self.get_static_strength(world, depth))
 
 class Engine(SubSystem):
 

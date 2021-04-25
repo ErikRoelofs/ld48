@@ -86,7 +86,9 @@ def main():
             sub.get_heat().draw(725, HEIGHT - 25)
             pass
 
+        sub.draw_static_interference()
+
         onedI.show()
-        clock.tick()
+        clock.tick(40)
 
 main()
