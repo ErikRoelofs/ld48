@@ -94,7 +94,7 @@ class Sub:
         self.antenna().update_connection(self.world, self.depth, dt)
 
         # losing connection
-        if self.antenna().get_static_strength(self.world, self.depth) >= 0.9 or self.engine().is_broken():
+        if self.antenna().get_static_strength(self.world, self.depth) >= 0.9 or self.engine().is_broken() or self.science().is_broken():
             self.connection_down += dt
         else:
             self.connection_down = 0

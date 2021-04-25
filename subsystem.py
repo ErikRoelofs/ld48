@@ -437,6 +437,7 @@ class SonarPing:
     def still_active(self):
         return self.strength > 0
 
+
 class ScienceStation(SubSystem):
     def __init__(self, oned, panel_color, output_color, off_color, max_power_consumption):
         super().__init__(oned, panel_color, output_color, off_color, max_power_consumption)
@@ -456,3 +457,6 @@ class ScienceStation(SubSystem):
                 self.researched[str(biome)] = 0
             self.researched[str(biome)] += (dt * self.get_strength())
         return len(biomes) * self.get_strength()
+
+    def get_score(self):
+        return self.researched

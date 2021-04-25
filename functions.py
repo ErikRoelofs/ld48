@@ -57,3 +57,10 @@ def make_static_image(amount = 100):
         color = DAMAGE_COLORS[random.randint(0, len(DAMAGE_COLORS) - 1)]
         colors.append(color)
     return ArrayImage(colors)
+
+
+def get_color(biome, biome_types):
+    for other_biome in biome_types:
+        if biome == other_biome.name():
+            return other_biome.science_color()
+    return None

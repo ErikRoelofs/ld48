@@ -17,8 +17,12 @@ class World:
             SonarVisible1,
             SonarVisible2,
             DragonBiome,
-            CrabBiome
+            CrabBiome,
+            CowBiome
         ]
+
+    def list_biomes(self):
+        return self.biome_types
 
     def update_world(self, depth, sub, dt):
         if depth > self.next_check:
@@ -208,6 +212,16 @@ class Biome:
     def update(self, sub, dt):
         pass
 
+    @staticmethod
+    def science_color():
+        return Point((255, 255, 255))
+
+    @staticmethod
+    def name():
+        return 'name'
+
+    def __str__(self):
+        return self.name()
 
 class ThermalVentsBiome(Biome):
     def temperature_flat_change(self):
@@ -216,9 +230,13 @@ class ThermalVentsBiome(Biome):
     def get_sound(self):
         return SOUND_HOTSPOT
 
-    def __str__(self):
+    @staticmethod
+    def name():
         return 'thermal vents'
 
+    @staticmethod
+    def science_color():
+        return Point((128, 0, 0))
 
 class CryonicVentsBiome(Biome):
     def temperature_flat_change(self):
@@ -227,9 +245,13 @@ class CryonicVentsBiome(Biome):
     def get_sound(self):
         return SOUND_COLDSPOT
 
-    def __str__(self):
+    @staticmethod
+    def name():
         return 'cryonic vents'
 
+    @staticmethod
+    def science_color():
+        return Point((150, 200, 255))
 
 class FloatingRocksBiome(Biome):
     def nearby_objects_flat_change(self):
@@ -244,9 +266,13 @@ class FloatingRocksBiome(Biome):
     def get_sonar_color(self, strength):
         return Point((0 * ((1 + strength) / 2), 255 * ((1 + strength) / 2), 0 * ((1 + strength) / 2)))
 
-    def __str__(self):
+    @staticmethod
+    def name():
         return 'floating rocks'
 
+    @staticmethod
+    def science_color():
+        return Point((125, 125, 125))
 
 class StaticDisturbance(Biome):
     def static_base_flat_change(self):
@@ -258,15 +284,21 @@ class StaticDisturbance(Biome):
     def get_sonar_color(self, strength):
         return Point((0, 0, 255 * ((1 + strength) / 2)))
 
-    def __str__(self):
+    @staticmethod
+    def name():
         return 'static disturbance'
+
+    @staticmethod
+    def science_color():
+        return Point((255, 255, 255))
 
 
 class StrangeNoisy1(Biome):
     def get_sound(self):
         return SOUND_WEIRD1
 
-    def __str__(self):
+    @staticmethod
+    def name():
         return 'strange noise 1'
 
     def volume(self, depth):
@@ -280,12 +312,17 @@ class StrangeNoisy1(Biome):
     def min_depth_required():
         return 1500
 
+    @staticmethod
+    def science_color():
+        return Point((100, 255, 125))
+
 
 class StrangeNoisy2(Biome):
     def get_sound(self):
         return SOUND_WEIRD2
 
-    def __str__(self):
+    @staticmethod
+    def name():
         return 'strange noise 2'
 
     def volume(self, depth):
@@ -299,6 +336,10 @@ class StrangeNoisy2(Biome):
     def min_depth_required():
         return 1000
 
+    @staticmethod
+    def science_color():
+        return Point((255, 100, 125))
+
 
 class SonarVisible1(Biome):
     def shows_on_sonar(self):
@@ -307,7 +348,8 @@ class SonarVisible1(Biome):
     def get_sonar_color(self, strength):
         return Point((255 * ((1 + strength) / 2), 0, 255 * ((1 + strength) / 2)))
 
-    def __str__(self):
+    @staticmethod
+    def name():
         return 'sonar visible 1'
 
     @staticmethod
@@ -318,6 +360,10 @@ class SonarVisible1(Biome):
     def min_depth_required():
         return 800
 
+    @staticmethod
+    def science_color():
+        return Point((255, 0, 255))
+
 
 class SonarVisible2(Biome):
     def shows_on_sonar(self):
@@ -326,7 +372,8 @@ class SonarVisible2(Biome):
     def get_sonar_color(self, strength):
         return Point((255 * ((1 + strength) / 2), 128 * ((1 + strength) / 2), 128 * ((1 + strength) / 2)))
 
-    def __str__(self):
+    @staticmethod
+    def name():
         return 'sonar visible 2'
 
     @staticmethod
@@ -337,6 +384,9 @@ class SonarVisible2(Biome):
     def min_depth_required():
         return 1400
 
+    @staticmethod
+    def science_color():
+        return Point((255, 128, 128))
 
 class DragonBiome(Biome):
 
@@ -351,7 +401,8 @@ class DragonBiome(Biome):
         self.speed = 10
         self.last_heard = 0
 
-    def __str__(self):
+    @staticmethod
+    def name():
         return 'dragon'
 
     @staticmethod
@@ -427,6 +478,10 @@ class DragonBiome(Biome):
             return False
         return depth < self.end + BIOME_EFFECT_DISTANCE
 
+    @staticmethod
+    def science_color():
+        return Point((255, 0, 0))
+
 
 class CrabBiome(Biome):
 
@@ -441,7 +496,8 @@ class CrabBiome(Biome):
         self.speed = 15
         self.last_heard = 0
 
-    def __str__(self):
+    @staticmethod
+    def name():
         return 'crab'
 
     @staticmethod
@@ -517,6 +573,10 @@ class CrabBiome(Biome):
             return False
         return depth < self.end + BIOME_EFFECT_DISTANCE
 
+    @staticmethod
+    def science_color():
+        return Point((255, 50, 180))
+
 
 class CowBiome(Biome):
 
@@ -531,7 +591,8 @@ class CowBiome(Biome):
         self.speed = 10
         self.last_heard = 0
 
-    def __str__(self):
+    @staticmethod
+    def name():
         return 'cow'
 
     @staticmethod
@@ -598,3 +659,7 @@ class CowBiome(Biome):
         if self.monster_distance > 100:
             return False
         return depth < self.end + BIOME_EFFECT_DISTANCE
+
+    @staticmethod
+    def science_color():
+        return Point((120, 178, 130))

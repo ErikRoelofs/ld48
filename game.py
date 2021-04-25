@@ -1,6 +1,7 @@
 import pygame
 import sys
 from soundplayer import SoundPlayer
+from functions import get_color
 
 pygame.init()
 clock = pygame.time.Clock()
@@ -68,7 +69,7 @@ def main():
         # updating
         if not sub.update(dt):
             # game over.
-            game_end(sub.score)
+            new_game_end(sub.science().get_score(), world.list_biomes())
 
         world.update_world(sub.depth, sub, dt)
         altimeter.update(dt)
@@ -151,5 +152,50 @@ def game_end(final_score):
 
         onedI.show()
         clock.tick(tick_speed)
+
+def new_game_end(science, biome_types):
+    showed_static = 0
+    static_image = make_static(100, 400)
+    max_score_height = HEIGHT / len(biome_types)
+    max_score_need = 5
+    tick_speed = 10
+    sound = SoundPlayer()
+    sound.set_static_volume(1)
+    switched = False
+    begin_fade = False
+    while True:
+        for events in pygame.event.get():
+            if events.type == QUIT:
+                sys.exit(0)
+            if events.type == KEYDOWN:
+                if events.key == K_r:
+                    main()
+
+        dt = clock.get_time() / 1000
+
+        if showed_static < 3:
+            showed_static += dt
+            onedI.draw(static_image, 0, HEIGHT)
+        else:
+            if switched == False:
+                tick_speed = 50
+                switched = True
+
+            # show final score
+            last_draw = 0
+            for biome, score in science.items():
+                color = get_color(biome, biome_types)
+                use_score = min(score, max_score_need)
+                length_need = (use_score / max_score_need) * max_score_height
+                onedI.draw(color, int(last_draw), int(last_draw + length_need))
+                last_draw += length_need
+
+        if showed_static > 2 and not begin_fade:
+            pygame.mixer.fadeout(1000)
+            begin_fade = True
+
+        onedI.show()
+        clock.tick(tick_speed)
+
 
 main()
