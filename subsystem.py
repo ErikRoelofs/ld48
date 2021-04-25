@@ -292,6 +292,10 @@ class Audio(SubSystem):
         self.depth = depth
         self.level_changed()
 
+    def engage(self):
+        super().engage()
+        self.player.play_ambiant_sound(0.33)
+
 
 class Antenna(SubSystem):
     def __init__(self, oned, panel_color, output_color, off_color, max_power_consumption):

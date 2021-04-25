@@ -19,8 +19,10 @@ class SoundPlayer:
         self.impact3 = pygame.mixer.Sound("sounds/impacts/impact3.wav")
         self.impact4 = pygame.mixer.Sound("sounds/impacts/impact4.wav")
 
+        self.ambiant = pygame.mixer.Sound("sounds/ambiance/ambiance.wav")
+
         self.all_sounds = [
-            self.release_sound, self.splash_sound, self.engine_sound
+            self.release_sound, self.splash_sound, self.engine_sound, self.impact1, self.impact2, self.impact3, self.impact4,self.ambiant
         ]
         self.sound_volumes = {
             self.release_sound: 1,
@@ -30,6 +32,7 @@ class SoundPlayer:
             self.impact2: 1,
             self.impact3: 1,
             self.impact4: 1,
+            self.ambiant: 1,
         }
 
     def play_static(self):
@@ -57,6 +60,8 @@ class SoundPlayer:
                 return self.impact3
             if sound == 4:
                 return self.impact4
+        if command == SOUND_AMBIENT:
+            return self.ambiant
 
         raise ValueError("No sound for: " + str(command))
 
@@ -71,6 +76,9 @@ class SoundPlayer:
         self.sound_volumes[to_play] = volume
         to_play.set_volume(volume * self.global_volume)
         to_play.play(-1)
+
+    def play_ambiant_sound(self, volume):
+        self.play_sound(SOUND_AMBIENT, volume)
 
     def update_volume(self, command, new_volume):
         to_play = self.get_sound(command)
