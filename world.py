@@ -6,9 +6,9 @@ class World:
     def __init__(self):
         self.next_check = 100
         self.biomes = [
-#            FloatingRocksBiome(300, 600),
-#            ThermalVentsBiome(500, 1000),
-#            StaticDisturbance(500, 900)
+            FloatingRocksBiome(300, 600),
+            ThermalVentsBiome(500, 1000),
+            StaticDisturbance(500, 900)
         ]
         self.biome_types = [
             ThermalVentsBiome,
@@ -87,10 +87,10 @@ class World:
                     sounds[sound] = biome.strength(depth)
         return sounds
 
-    def get_sonar_color(self, depth):
+    def get_sonar_color(self, depth, strength):
         for biome in self.biomes:
             if biome.start < depth < biome.end and biome.shows_on_sonar():
-                return biome.get_sonar_color()
+                return biome.get_sonar_color(strength)
         return None
 
 class Biome:
@@ -155,8 +155,8 @@ class Biome:
     def shows_on_sonar(self):
         return False
 
-    def get_sonar_color(self):
-        return (255, 255, 255)
+    def get_sonar_color(self, strength):
+        return Point((255 * strength, 255 * strength, 255 * strength))
 
 class ThermalVentsBiome(Biome):
     def temperature_flat_change(self):
@@ -182,8 +182,8 @@ class FloatingRocksBiome(Biome):
     def shows_on_sonar(self):
         return True
 
-    def get_sonar_color(self):
-        return Point((100, 100, 100))
+    def get_sonar_color(self, strength):
+        return Point((0 * ((1 + strength) / 2), 255 * ((1 + strength) / 2), 0 * ((1 + strength) / 2)))
 
 
 class StaticDisturbance(Biome):
@@ -193,5 +193,5 @@ class StaticDisturbance(Biome):
     def shows_on_sonar(self):
         return True
 
-    def get_sonar_color(self):
-        return Point((0, 0, 255))
+    def get_sonar_color(self, strength):
+        return Point((0, 0, 255 * ((1 + strength) / 2)))

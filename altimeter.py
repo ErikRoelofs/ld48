@@ -29,7 +29,7 @@ class Altimeter:
 
         # draw things revealed by sonar
         for reveal, timer in self.reveals.items():
-            color = self.world.get_sonar_color(reveal)
+            color = self.world.get_sonar_color(reveal, timer)
             if color:
                 self.oned.draw(color, self.depth_to_pos(depth, reveal))
 
@@ -45,7 +45,7 @@ class Altimeter:
 
 
     def reveal(self, depth):
-        self.reveals[int(depth)] = 1
+        self.reveals[int(depth)] = SONAR_REVEAL_TIME
 
     def update(self, dt):
         to_remove = []
