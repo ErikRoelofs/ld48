@@ -12,7 +12,7 @@ class SubSystem:
         self.output_color = Point(output_color)
         self.off_color = Point(off_color)
         self.panel_size_percentage = 0.03
-        self.level = 0.1
+        self.level = 0
         self.max_power_consumption = max_power_consumption
         self.damage = 0
         self.scratches = []
@@ -270,6 +270,7 @@ class Audio(SubSystem):
         self.player = SoundPlayer()
         self.depth = 0
         self.world = world
+        self.level = 0.25
 
     def play(self, command, external_volume):
         self.player.play_sound(command, external_volume)
@@ -307,6 +308,7 @@ class Antenna(SubSystem):
 
         self.player = SoundPlayer()
         self.depth = 0
+        self.level = 0.25
 
     def get_static_strength(self, world, depth):
         strength_need = (depth * AUDIO_QUALITY_DROPOFF) + world.get_static_interference(depth)
@@ -387,6 +389,7 @@ class Sonar(SubSystem):
         self.charge = 0
         self.sonar_pings = sonar_pings
         self.oned = oned
+        self.level = 0.25
 
     def update_sonar(self, depth, dt):
         if self.get_strength() == 0:
@@ -426,3 +429,23 @@ class SonarPing:
 
     def still_active(self):
         return self.strength > 0
+
+class ScienceStation(SubSystem):
+    def __init__(self, oned, panel_color, output_color, off_color, max_power_consumption):
+        super().__init__(oned, panel_color, output_color, off_color, max_power_consumption)
+        self.oned = oned
+        self.researched = {}
+
+    def engage(self):
+        super().engage()
+
+    def level_changed(self):
+        super().level_changed()
+
+    def update_science(self, dt, depth, world):
+        biomes = world.get_biomes(depth)
+        for biome in biomes:
+            if not str(biome) in self.researched:
+                self.researched[str(biome)] = 0
+            self.researched[str(biome)] += (dt * self.get_strength())
+        return len(biomes) * self.get_strength()

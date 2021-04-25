@@ -6,15 +6,14 @@ class World:
     def __init__(self):
         self.next_check = 100
         self.biomes = [
-            FloatingRocksBiome(300, 600),
-            ThermalVentsBiome(500, 1000),
-            StaticDisturbance(500, 900)
         ]
         self.biome_types = [
             ThermalVentsBiome,
             FloatingRocksBiome,
             CryonicVentsBiome,
-            StaticDisturbance
+            StaticDisturbance,
+            StrangeNoisy1,
+            StrangeNoisy2
         ]
 
     def update_world(self, depth, dt):
@@ -28,19 +27,38 @@ class World:
     def maybe_new_biome(self, depth):
         # new biome must be out of sonar range
         if random.randint(0, 100) < 50:
-            new_type = self.get_new_biome_type()
+            new_type = self.get_new_biome_type(depth)
+            if new_type is None:
+                return
             size = random.randint(new_type.min_size(), new_type.max_size())
-            self.biomes.append(new_type(depth + 600, depth + 600 + size))
+            biome = new_type(depth + 600, depth + 600 + size)
+            if self.can_place_biome(biome):
+                self.biomes.append(biome)
 
-    def get_new_biome_type(self):
+    def can_place_biome(self, biome):
+        for existing in self.biomes:
+            if str(existing) == str(biome):
+                if existing.start < biome.start < existing.end:
+                    return False
+                if existing.start < biome.end < existing.end:
+                    return False
+                if existing.start > biome.start and existing.end < biome.end:
+                    return False
+        return True
+
+    def get_new_biome_type(self, depth):
         sum_weight = 0
         for biome_type in self.biome_types:
-            sum_weight += biome_type.prevalence()
+            if biome_type.min_depth_required() < depth:
+                sum_weight += biome_type.prevalence()
+        if sum_weight == 0:
+            return None
         picked = random.randint(0, sum_weight)
         for biome_type in self.biome_types:
-            picked -= biome_type.prevalence()
-            if picked < 0:
-                return biome_type
+            if biome_type.min_depth_required() < depth:
+                picked -= biome_type.prevalence()
+                if picked < 0:
+                    return biome_type
 
     def get_temperature(self, depth):
         if depth < SPACE_TO_SURFACE_DEPTH:
@@ -84,7 +102,7 @@ class World:
             if biome.strength(depth) > 0 and biome.get_sound():
                 sound = biome.get_sound()
                 if sound not in sounds: # only add once - further out biomes can't be heard
-                    sounds[sound] = biome.strength(depth)
+                    sounds[sound] = biome.volume(depth)
         return sounds
 
     def get_sonar_color(self, depth, strength):
@@ -92,6 +110,13 @@ class World:
             if biome.start < depth < biome.end and biome.shows_on_sonar():
                 return biome.get_sonar_color(strength)
         return None
+
+    def get_biomes(self, depth):
+        active = []
+        for biome in self.biomes:
+            if biome.start < depth < biome.end:
+                active.append(biome)
+        return active
 
 class Biome:
     def __init__(self, start, end):
@@ -110,6 +135,10 @@ class Biome:
     @staticmethod
     def max_size():
         return 500
+
+    @staticmethod
+    def min_depth_required():
+        return SPACE_TO_SURFACE_DEPTH
 
     def strength(self, depth):
         # full strength between start & end
@@ -158,6 +187,9 @@ class Biome:
     def get_sonar_color(self, strength):
         return Point((255 * strength, 255 * strength, 255 * strength))
 
+    def volume(self, depth):
+        return self.strength(depth)
+
 class ThermalVentsBiome(Biome):
     def temperature_flat_change(self):
         return 400
@@ -165,12 +197,18 @@ class ThermalVentsBiome(Biome):
     def get_sound(self):
         return SOUND_HOTSPOT
 
+    def __str__(self):
+        return 'thermal vents'
+
 class CryonicVentsBiome(Biome):
     def temperature_flat_change(self):
         return -250
 
     def get_sound(self):
         return SOUND_COLDSPOT
+
+    def __str__(self):
+        return 'cryonic vents'
 
 class FloatingRocksBiome(Biome):
     def nearby_objects_flat_change(self):
@@ -185,6 +223,8 @@ class FloatingRocksBiome(Biome):
     def get_sonar_color(self, strength):
         return Point((0 * ((1 + strength) / 2), 255 * ((1 + strength) / 2), 0 * ((1 + strength) / 2)))
 
+    def __str__(self):
+        return 'floating rocks'
 
 class StaticDisturbance(Biome):
     def static_base_flat_change(self):
@@ -195,3 +235,44 @@ class StaticDisturbance(Biome):
 
     def get_sonar_color(self, strength):
         return Point((0, 0, 255 * ((1 + strength) / 2)))
+
+    def __str__(self):
+        return 'static disturbance'
+
+
+class StrangeNoisy1(Biome):
+    def get_sound(self):
+        return SOUNDS_WEIRD1
+
+    def __str__(self):
+        return 'strange noise 1'
+
+    def volume(self, depth):
+        return self.strength(depth) / 3
+
+    @staticmethod
+    def prevalence():
+        return 25
+
+    @staticmethod
+    def min_depth_required():
+        return 1500
+
+
+class StrangeNoisy2(Biome):
+    def get_sound(self):
+        return SOUNDS_WEIRD2
+
+    def __str__(self):
+        return 'strange noise 2'
+
+    def volume(self, depth):
+        return self.strength(depth) / 2
+
+    @staticmethod
+    def prevalence():
+        return 50
+
+    @staticmethod
+    def min_depth_required():
+        return 1000
