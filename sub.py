@@ -88,7 +88,7 @@ class Sub:
         self.audio().update_audio(self.depth, dt)
 
         # connection
-        self.antenna().update_connection(self.depth, dt)
+        self.antenna().update_connection(self.world, self.depth, dt)
 
     def systems(self):
         return self.system
