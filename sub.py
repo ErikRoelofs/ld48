@@ -31,6 +31,7 @@ class Sub:
         self.world = world
         self.overheat_damage_counter = 0
         self.has_impacted = False
+        self.connection_down = 0
 
     def draw(self, position):
         self.oned.draw(self.graphic, position - 4, position + 4)
@@ -47,7 +48,7 @@ class Sub:
 
     def update(self, dt):
         if self.held:
-            return
+            return True
 
         # power
         power_usage = 0
@@ -89,6 +90,16 @@ class Sub:
 
         # connection
         self.antenna().update_connection(self.world, self.depth, dt)
+
+        # losing connection
+        if self.antenna().get_static_strength(self.world, self.depth) >= 0.9:
+            self.connection_down += dt
+        else:
+            self.connection_down = 0
+        if self.connection_down > 4:
+            return False
+
+        return True
 
     def systems(self):
         return self.system
@@ -134,7 +145,8 @@ class Sub:
 
     def draw_static_interference(self):
         strength = self.antenna().get_static_strength(self.world, self.depth)
-        broken_signals = int(strength * 25)
+        broken_signals = int(strength * 25) + int(self.connection_down * 60)
+        print(broken_signals)
         for i in range(1, broken_signals):
             pos = random.randint(0, HEIGHT)
             self.oned.draw(Point(DAMAGE_COLORS[random.randint(1, len(DAMAGE_COLORS) -1)]), pos, pos+1)

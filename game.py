@@ -63,7 +63,10 @@ def main():
                         system.set_level_from_percentage_clicked(position)
 
         # updating
-        sub.update(dt)
+        if not sub.update(dt):
+            # game over.
+            print("game over")
+            return
 
         # drawing
         if active_screen == ALTIMETER_SCREEN:

@@ -8,4 +8,4 @@ class World:
         return 0
 
     def get_static_interference(self, depth):
-        return 0
+        return 0.9
