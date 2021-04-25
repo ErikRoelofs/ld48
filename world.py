@@ -13,7 +13,9 @@ class World:
             CryonicVentsBiome,
             StaticDisturbance,
             StrangeNoisy1,
-            StrangeNoisy2
+            StrangeNoisy2,
+            SonarVisible1,
+            SonarVisible2,
         ]
 
     def update_world(self, depth, dt):
@@ -64,7 +66,7 @@ class World:
         if depth < SPACE_TO_SURFACE_DEPTH:
             return MIN_TEMPERATURE
 
-        base_temperature = 150 + (depth / 100)
+        base_temperature = 150 + (depth / 3)
         for biome in self.biomes:
             base_temperature += (biome.temperature_flat_change() * biome.strength(depth))
         for biome in self.biomes:
@@ -126,7 +128,7 @@ class Biome:
 
     @staticmethod
     def prevalence():
-        return 100
+        return 150
 
     @staticmethod
     def min_size():
@@ -192,7 +194,7 @@ class Biome:
 
 class ThermalVentsBiome(Biome):
     def temperature_flat_change(self):
-        return 400
+        return MAX_TEMPERATURE
 
     def get_sound(self):
         return SOUND_HOTSPOT
@@ -202,7 +204,7 @@ class ThermalVentsBiome(Biome):
 
 class CryonicVentsBiome(Biome):
     def temperature_flat_change(self):
-        return -250
+        return MIN_TEMPERATURE
 
     def get_sound(self):
         return SOUND_COLDSPOT
@@ -276,3 +278,41 @@ class StrangeNoisy2(Biome):
     @staticmethod
     def min_depth_required():
         return 1000
+
+
+class SonarVisible1(Biome):
+    def shows_on_sonar(self):
+        return True
+
+    def get_sonar_color(self, strength):
+        return Point((255 * ((1 + strength) / 2), 0, 255 * ((1 + strength) / 2)))
+
+    def __str__(self):
+        return 'sonar visible 1'
+
+    @staticmethod
+    def prevalence():
+        return 50
+
+    @staticmethod
+    def min_depth_required():
+        return 800
+
+
+class SonarVisible2(Biome):
+    def shows_on_sonar(self):
+        return True
+
+    def get_sonar_color(self, strength):
+        return Point((255 * ((1 + strength) / 2), 128 * ((1 + strength) / 2), 128 * ((1 + strength) / 2)))
+
+    def __str__(self):
+        return 'sonar visible 2'
+
+    @staticmethod
+    def prevalence():
+        return 30
+
+    @staticmethod
+    def min_depth_required():
+        return 1400
