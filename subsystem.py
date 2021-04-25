@@ -1,6 +1,7 @@
-from oned import Point, AnimatedSolidLine, GradientLine, ArrayImage, AnimatedArrayImage
+from oned import Point, AnimatedSolidLine, GradientLine
 from consts import *
 from soundplayer import SoundPlayer
+from functions import make_static
 import random
 
 class SubSystem:
@@ -335,19 +336,3 @@ class Engine(SubSystem):
     def level_changed(self):
         super().level_changed()
         self.audio.update_volume(SOUND_ENGINE, self.get_strength())
-
-
-def make_static(amount = 100, static_depth = 100):
-    images = []
-    for i in range(0, amount):
-        image = make_static_image(static_depth)
-        images.append(image)
-    return AnimatedArrayImage(images, 1)
-
-
-def make_static_image(amount = 100):
-    colors = []
-    for i in range(0, amount):
-        color = DAMAGE_COLORS[random.randint(0, len(DAMAGE_COLORS) - 1)]
-        colors.append(color)
-    return ArrayImage(colors)

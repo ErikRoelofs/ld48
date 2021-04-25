@@ -13,8 +13,9 @@ from world import World
 from pygame.locals import*
 
 
+onedI = Oned(WIDTH, HEIGHT, VERTICAL)
+
 def main():
-    onedI = Oned(WIDTH, HEIGHT, VERTICAL)
     altimeter = Altimeter(onedI)
     spaceship = GradientLine(SPACESHIP_COLOR_START, SPACESHIP_COLOR_END)
     world = World()
@@ -65,8 +66,8 @@ def main():
         # updating
         if not sub.update(dt):
             # game over.
-            print("game over")
-            return
+            pygame.mixer.stop()
+            game_end(sub.score)
 
         # drawing
         if active_screen == ALTIMETER_SCREEN:
@@ -93,5 +94,39 @@ def main():
 
         onedI.show()
         clock.tick(40)
+
+def game_end(final_score):
+    score_drawn = 0
+    score_draw_speed = 400
+    showed_static = 0
+    static_image = make_static(100, 400)
+    tick_speed = 10
+    while True:
+        for events in pygame.event.get():
+            if events.type == QUIT:
+                sys.exit(0)
+            if events.type == KEYDOWN:
+                if events.key == K_r:
+                    main()
+
+        dt = clock.get_time() / 1000
+
+        if showed_static < 3:
+            showed_static += dt
+            onedI.draw(static_image, 0, HEIGHT)
+        else:
+            tick_speed = 50
+            # update score drawer
+            if score_drawn < final_score:
+                score_draw_speed += dt * 200
+                score_drawn += (score_draw_speed * dt)
+            if score_drawn > final_score:
+                score_drawn = final_score
+
+            # draw score
+            score_drawer(onedI, score_drawn)
+
+        onedI.show()
+        clock.tick(tick_speed)
 
 main()

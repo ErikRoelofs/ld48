@@ -32,6 +32,7 @@ class Sub:
         self.overheat_damage_counter = 0
         self.has_impacted = False
         self.connection_down = 0
+        self.score = 0
 
     def draw(self, position):
         self.oned.draw(self.graphic, position - 4, position + 4)
@@ -80,7 +81,8 @@ class Sub:
             self.speed = self.engine().update_speed(dt)
 
         # depth
-        self.depth = self.depth + (self.speed * dt)
+        self.depth += (self.speed * dt)
+        self.score += (self.speed * dt) # score for depth
 
         # temperature
         self.get_heat().update_heat(self, self.world, dt)
@@ -146,7 +148,6 @@ class Sub:
     def draw_static_interference(self):
         strength = self.antenna().get_static_strength(self.world, self.depth)
         broken_signals = int(strength * 25) + int(self.connection_down * 60)
-        print(broken_signals)
         for i in range(1, broken_signals):
             pos = random.randint(0, HEIGHT)
             self.oned.draw(Point(DAMAGE_COLORS[random.randint(1, len(DAMAGE_COLORS) -1)]), pos, pos+1)

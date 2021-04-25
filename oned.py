@@ -189,9 +189,6 @@ class AnimatedArrayImage(Drawable):
         self.duration = duration
 
     def colorAt(self, percentage, time):
-        print(percentage)
-        print(time)
-        print('--')
         place = (time % self.duration) / self.duration
         use_img = math.floor(place * self.num_images)
         return self.images[use_img].colorAt(percentage, time)
