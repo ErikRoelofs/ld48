@@ -1,17 +1,151 @@
 from consts import *
+import random
 
 class World:
     def __init__(self):
-        pass
+        self.next_check = 100
+        self.biomes = [
+            ThermalVentsBiome(500, 1000),
+            FloatingRocksBiome(600, 800)
+        ]
+        self.biome_types = [
+            ThermalVentsBiome,
+            FloatingRocksBiome,
+            CryonicVentsBiome,
+            StaticDisturbance
+        ]
+
+    def update_world(self, depth, dt):
+        if depth > self.next_check:
+            self.maybe_new_biome(depth)
+            self.next_check += random.randint(75, 275)
+
+    def maybe_new_biome(self, depth):
+        # new biome must be out of sonar range
+        if random.randint(0, 100) < 50:
+            new_type = self.get_new_biome_type()
+            size = random.randint(new_type.min_size(), new_type.max_size())
+            self.biomes.append(new_type(depth + 600, depth + 600 + size))
+            print("adding a new " + str(new_type) + " biome at " + str(depth + 600) + " up to " + str(depth + 600 + size))
+        else:
+            print("not adding a new biome")
+
+    def get_new_biome_type(self):
+        sum_weight = 0
+        for biome_type in self.biome_types:
+            sum_weight += biome_type.prevalence()
+        picked = random.randint(0, sum_weight)
+        for biome_type in self.biome_types:
+            picked -= biome_type.prevalence()
+            if picked < 0:
+                return biome_type
+
+
 
     def get_temperature(self, depth):
-        return 0
+        if depth < SPACE_TO_SURFACE_DEPTH:
+            return MIN_TEMPERATURE
+
+        base_temperature = 150 + (depth / 100)
+        for biome in self.biomes:
+            base_temperature += (biome.temperature_flat_change() * biome.strength(depth))
+        for biome in self.biomes:
+            base_temperature *= ((biome.temperature_modifier() - 1) * biome.strength(depth)) + 1
+
+        return base_temperature
 
     def get_static_interference(self, depth):
-        return 0
+        base_interference = 0
+        for biome in self.biomes:
+            base_interference += (biome.static_base_flat_change() * biome.strength(depth))
+        for biome in self.biomes:
+            base_interference *= ((biome.static_modifier() - 1) * biome.strength(depth)) + 1
+        return base_interference
 
     def get_nearby_objects(self, depth):
-        return 1
+        base_objects = 0
+        for biome in self.biomes:
+            base_objects += (biome.nearby_objects_flat_change() * biome.strength(depth))
+        for biome in self.biomes:
+            base_objects *= ((biome.nearby_objects_modifier() - 1) * biome.strength(depth)) + 1
+        return base_objects
 
     def get_nearby_object_mass(self, depth):
-        return 1.5
+        base_objects_mass = 0
+        for biome in self.biomes:
+            base_objects_mass += (biome.nearby_objects_mass_flat_change() * biome.strength(depth))
+        for biome in self.biomes:
+            base_objects_mass *= ((biome.nearby_objects_mass_modifier() - 1) * biome.strength(depth)) + 1
+        return base_objects_mass
+
+
+class Biome:
+    def __init__(self, start, end):
+        self.start = start
+        self.end = end
+
+    @staticmethod
+    def prevalence():
+        return 100
+
+    @staticmethod
+    def min_size():
+        return 100
+
+    @staticmethod
+    def max_size():
+        return 500
+
+    def strength(self, depth):
+        # full strength between start & end
+        if self.start < depth < self.end:
+            return 1
+        # growing for 200 units in & out
+        if 0 < self.start - depth < 200:
+            return 1 - ((self.start - depth) / 200)
+        if 0 < depth - self.end < 200:
+            return 1 - ((depth - self.end) / 200)
+        return 0
+
+    def temperature_modifier(self):
+        return 1
+
+    def static_modifier(self):
+        return 1
+
+    def nearby_objects_modifier(self):
+        return 1
+
+    def nearby_objects_mass_modifier(self):
+        return 1
+
+    def temperature_flat_change(self):
+        return 0
+
+    def static_base_flat_change(self):
+        return 0
+
+    def nearby_objects_flat_change(self):
+        return 0
+
+    def nearby_objects_mass_flat_change(self):
+        return 0
+
+class ThermalVentsBiome(Biome):
+    def temperature_flat_change(self):
+        return 400
+
+class CryonicVentsBiome(Biome):
+    def temperature_flat_change(self):
+        return -250
+
+class FloatingRocksBiome(Biome):
+    def nearby_objects_flat_change(self):
+        return 0.6
+
+    def nearby_objects_mass_flat_change(self):
+        return 0.5
+
+class StaticDisturbance(Biome):
+    def static_base_flat_change(self):
+        return 0.3

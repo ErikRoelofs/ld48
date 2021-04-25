@@ -69,6 +69,8 @@ def main():
             # game over.
             game_end(sub.score)
 
+        world.update_world(sub.depth, dt)
+
         # drawing
         if active_screen == ALTIMETER_SCREEN:
             onedI.draw(spaceship, 0, 20)
@@ -108,6 +110,7 @@ def game_end(final_score):
     sound = SoundPlayer()
     sound.set_static_volume(1)
     switched = False
+    begin_fade = False
     while True:
         for events in pygame.event.get():
             if events.type == QUIT:
@@ -123,7 +126,6 @@ def game_end(final_score):
             onedI.draw(static_image, 0, HEIGHT)
         else:
             if switched == False:
-                pygame.mixer.stop()
                 tick_speed = 50
                 switched = True
             # update score drawer
@@ -135,6 +137,10 @@ def game_end(final_score):
 
             # draw score
             score_drawer(onedI, score_drawn)
+
+        if showed_static > 2 and not begin_fade:
+            pygame.mixer.fadeout(1000)
+            begin_fade = True
 
         onedI.show()
         clock.tick(tick_speed)

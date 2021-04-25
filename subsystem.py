@@ -211,7 +211,7 @@ class Heat:
         self.too_cold_zone = Point(FREEZING_END_COLOR)
         self.marker_ok = Point(NOTCH_COLOR)
         self.oned = oned
-        self.temperature = 0
+        self.temperature = MIN_TEMPERATURE
         self.overheat_damage_counter = 0
 
     def draw(self, start, end):
@@ -258,7 +258,7 @@ class Heat:
             self.overheat_damage_counter -= dt
 
         if self.overheat_damage_counter > 1:
-            sub.get_rand_sys().apply_damage(random.randint(0, 1000) / 100)
+            sub.get_rand_sys().apply_damage(random.randint(0, 100) / 100)
             self.overheat_damage_counter -= 1
         if self.overheat_damage_counter < 0:
             self.overheat_damage_counter = 0

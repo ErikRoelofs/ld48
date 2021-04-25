@@ -26,7 +26,6 @@ class Sub:
         self.powered_up = False
         self.power_use = 0
         self.battery_energy = 0
-        self.temperature = -150
         self.heat = Heat(oned)
         self.world = world
         self.overheat_damage_counter = 0
@@ -133,18 +132,6 @@ class Sub:
 
     def antenna(self):
         return self.system[5]
-
-    def get_max_power(self):
-        if self.temperature > SUB_FREEZING_TRESHOLD:
-            return MAX_POWER_PRODUCTION
-        max_power_loss = abs(MIN_TEMPERATURE - SUB_FREEZING_TRESHOLD)
-        below_treshold = SUB_FREEZING_TRESHOLD - self.temperature
-        percentage = below_treshold / max_power_loss
-        power_cut = percentage * MAX_POWER_PRODUCTION_LOSS_PERCENTAGE
-        return MAX_POWER_PRODUCTION * (1 - power_cut)
-
-    def get_normal_max_power(self):
-        return MAX_POWER_PRODUCTION
 
     def get_max_battery(self):
         return MAX_BATTERY_CAPACITY

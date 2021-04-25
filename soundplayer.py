@@ -78,7 +78,7 @@ class SoundPlayer:
         to_play.play(-1)
 
     def play_ambiant_sound(self, volume):
-        self.play_sound(SOUND_AMBIENT, volume)
+        self.play_repeating(SOUND_AMBIENT, volume)
 
     def update_volume(self, command, new_volume):
         to_play = self.get_sound(command)
