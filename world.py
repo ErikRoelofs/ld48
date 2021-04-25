@@ -1,13 +1,11 @@
 from consts import *
 import random
 from oned import Point
-from soundplayer import SoundPlayer
 
 class World:
     def __init__(self):
         self.next_check = 100
         self.biomes = [
-            HuntingGround(300, 2000)
         ]
         self.biome_types = [
             ThermalVentsBiome,
@@ -18,7 +16,8 @@ class World:
             StrangeNoisy2,
             SonarVisible1,
             SonarVisible2,
-            HuntingGround
+            DragonBiome,
+            CrabBiome
         ]
 
     def update_world(self, depth, sub, dt):
@@ -76,6 +75,8 @@ class World:
         for biome in self.biomes:
             base_temperature *= ((biome.temperature_modifier() - 1) * biome.strength(depth)) + 1
 
+        if base_temperature > MAX_TEMPERATURE:
+            return MAX_TEMPERATURE
         return base_temperature
 
     def get_static_interference(self, depth):
@@ -337,11 +338,11 @@ class SonarVisible2(Biome):
         return 1400
 
 
-class HuntingGround(Biome):
+class DragonBiome(Biome):
 
     def __init__(self, start, end):
         super().__init__(start, end)
-        self.monster_distance = random.randint(50, 100)
+        self.monster_distance = random.randint(40, 80)
         self.scan = 0
         self.approaching = False
         self.waiting = True
@@ -349,10 +350,9 @@ class HuntingGround(Biome):
         self.lost_interest = False
         self.speed = 10
         self.last_heard = 0
-        self.player = SoundPlayer()
 
     def __str__(self):
-        return 'hunting grounds'
+        return 'dragon'
 
     @staticmethod
     def prevalence():
@@ -416,6 +416,178 @@ class HuntingGround(Biome):
                     self.approaching = True
                     self.waiting = False
                     self.leaving = False
+
+        if self.approaching:
+            self.monster_distance -= dt * self.speed
+        if self.leaving:
+            self.monster_distance += dt * self.speed
+
+    def is_relevant(self, depth):
+        if self.monster_distance > 100:
+            return False
+        return depth < self.end + BIOME_EFFECT_DISTANCE
+
+
+class CrabBiome(Biome):
+
+    def __init__(self, start, end):
+        super().__init__(start, end)
+        self.monster_distance = random.randint(40, 80)
+        self.scan = 0
+        self.approaching = False
+        self.waiting = True
+        self.leaving = False
+        self.lost_interest = False
+        self.speed = 15
+        self.last_heard = 0
+
+    def __str__(self):
+        return 'crab'
+
+    @staticmethod
+    def prevalence():
+        return 30
+
+    @staticmethod
+    def min_depth_required():
+        return 1700
+
+    def get_sound(self):
+        return SOUND_CRAB
+
+    def volume(self, depth):
+        return 1 - (pow(self.monster_distance, 2) / 10000)
+
+    def nearby_objects_flat_change(self):
+        if self.monster_distance > 20:
+            return 0
+        self.lost_interest = True
+        return 1
+
+    def nearby_objects_mass_flat_change(self):
+        return 0.5
+
+    def nearby_objects_speed_flat_change(self):
+        return 1
+
+    def update(self, sub, dt):
+        if self.lost_interest:
+            self.monster_distance += dt * self.speed
+            return
+
+        self.scan += dt
+        self.last_heard += dt
+        if self.last_heard > 10:
+            self.lost_interest = True
+
+        if self.scan > 0.5:
+            self.scan -= 0.5
+            # listen for the sub
+            if random.randint(0, 90) < sub.noise() * 100:
+                # heard it
+                self.last_heard = 0
+                self.approaching = True
+                self.waiting = False
+                self.leaving = False
+            else:
+                behavior = random.randint(0, 100)
+                if behavior < 30:
+                    # wait
+                    self.approaching = False
+                    self.waiting = True
+                    self.leaving = False
+                elif behavior < 65:
+                    # leave
+                    self.approaching = False
+                    self.waiting = False
+                    self.leaving = True
+                else:
+                    # approach
+                    self.approaching = True
+                    self.waiting = False
+                    self.leaving = False
+
+        if self.approaching:
+            self.monster_distance -= dt * self.speed
+        if self.leaving:
+            self.monster_distance += dt * self.speed
+
+    def is_relevant(self, depth):
+        if self.monster_distance > 100:
+            return False
+        return depth < self.end + BIOME_EFFECT_DISTANCE
+
+
+class CowBiome(Biome):
+
+    def __init__(self, start, end):
+        super().__init__(start, end)
+        self.monster_distance = random.randint(40, 80)
+        self.scan = 0
+        self.approaching = False
+        self.waiting = True
+        self.leaving = False
+        self.lost_interest = False
+        self.speed = 10
+        self.last_heard = 0
+
+    def __str__(self):
+        return 'cow'
+
+    @staticmethod
+    def prevalence():
+        return 30
+
+    @staticmethod
+    def min_depth_required():
+        return 1700
+
+    def get_sound(self):
+        return SOUND_COW
+
+    def volume(self, depth):
+        return 1 - (pow(self.monster_distance, 2) / 10000)
+
+    def nearby_objects_flat_change(self):
+        if self.monster_distance > 20:
+            return 0
+        self.lost_interest = True
+        return 1
+
+    def nearby_objects_mass_flat_change(self):
+        return 0.6
+
+    def nearby_objects_speed_flat_change(self):
+        return 1
+
+    def update(self, sub, dt):
+        if self.lost_interest:
+            self.monster_distance += dt * self.speed
+            return
+
+        self.scan += dt
+        self.last_heard += dt
+        if self.last_heard > 20:
+            self.lost_interest = True
+
+        if self.scan > 0.5:
+            self.scan -= 0.5
+            behavior = random.randint(0, 100)
+            if behavior < 40:
+                # wait
+                self.approaching = False
+                self.waiting = True
+                self.leaving = False
+            elif behavior < 80:
+                # leave
+                self.approaching = False
+                self.waiting = False
+                self.leaving = True
+            else:
+                # approach
+                self.approaching = True
+                self.waiting = False
+                self.leaving = False
 
         if self.approaching:
             self.monster_distance -= dt * self.speed
