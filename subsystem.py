@@ -265,10 +265,11 @@ class Heat:
 
 
 class Audio(SubSystem):
-    def __init__(self, oned, panel_color, output_color, off_color, max_power_consumption):
+    def __init__(self, oned, panel_color, output_color, off_color, max_power_consumption, world):
         super().__init__(oned, panel_color, output_color, off_color, max_power_consumption)
         self.player = SoundPlayer()
         self.depth = 0
+        self.world = world
 
     def play(self, command, external_volume):
         self.player.play_sound(command, external_volume)
@@ -291,6 +292,9 @@ class Audio(SubSystem):
     def update_audio(self, depth, dt):
         self.depth = depth
         self.level_changed()
+        sounds = self.world.get_new_sounds_at(depth)
+        for (sound, volume) in sounds.items():
+            self.player.play_repeating(sound, volume)
 
     def engage(self):
         super().engage()

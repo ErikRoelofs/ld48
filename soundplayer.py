@@ -11,7 +11,6 @@ class SoundPlayer:
 
         self.release_sound = pygame.mixer.Sound("sounds/release.wav")
         self.splash_sound = pygame.mixer.Sound("sounds/splash.wav")
-        self.splash_sound.fadeout(1500)
         self.engine_sound = pygame.mixer.Sound("sounds/engine.wav")
 
         self.impact1 = pygame.mixer.Sound("sounds/impacts/impact1.wav")
@@ -21,8 +20,11 @@ class SoundPlayer:
 
         self.ambiant = pygame.mixer.Sound("sounds/ambiance/ambiance.wav")
 
+        self.coldspot = pygame.mixer.Sound("sounds/coldspot.wav")
+        self.hotspot = pygame.mixer.Sound("sounds/boiling.wav")
+
         self.all_sounds = [
-            self.release_sound, self.splash_sound, self.engine_sound, self.impact1, self.impact2, self.impact3, self.impact4,self.ambiant
+            self.release_sound, self.splash_sound, self.engine_sound, self.impact1, self.impact2, self.impact3, self.impact4,self.ambiant, self.hotspot, self.coldspot
         ]
         self.sound_volumes = {
             self.release_sound: 1,
@@ -33,6 +35,8 @@ class SoundPlayer:
             self.impact3: 1,
             self.impact4: 1,
             self.ambiant: 1,
+            self.coldspot: 1,
+            self.hotspot: 1
         }
 
     def play_static(self):
@@ -62,6 +66,10 @@ class SoundPlayer:
                 return self.impact4
         if command == SOUND_AMBIENT:
             return self.ambiant
+        if command == SOUND_HOTSPOT:
+            return self.hotspot
+        if command == SOUND_COLDSPOT:
+            return self.coldspot
 
         raise ValueError("No sound for: " + str(command))
 
@@ -69,13 +77,21 @@ class SoundPlayer:
         to_play = self.get_sound(command)
         self.sound_volumes[to_play] = volume
         to_play.set_volume(volume * self.global_volume)
-        to_play.play()
+        if to_play.get_num_channels() == 0:
+            to_play.play()
+            if command == SOUND_SPLASH:
+                to_play.fadeout(1500)
 
     def play_repeating(self, command, volume):
         to_play = self.get_sound(command)
         self.sound_volumes[to_play] = volume
         to_play.set_volume(volume * self.global_volume)
-        to_play.play(-1)
+        if to_play.get_num_channels() == 0:
+            to_play.play(-1)
+
+    def stop_repeating_sound(self, command):
+        to_play = self.get_sound(command)
+        to_play.stop()
 
     def play_ambiant_sound(self, volume):
         self.play_repeating(SOUND_AMBIENT, volume)

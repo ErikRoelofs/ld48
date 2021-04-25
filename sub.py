@@ -11,7 +11,7 @@ class Sub:
         self.depth = 10
         self.speed = 0
         self.target_speed = 0
-        audio_sys = Audio(oned, (0, 255, 255), (0, 150, 150), (0, 0, 0), 200)
+        audio_sys = Audio(oned, (0, 255, 255), (0, 150, 150), (0, 0, 0), 200, world)
         self.system = [
             Engine(oned, (255, 0, 0), (150, 0, 0), (0, 0, 0), 200, audio_sys),
             EvasiveEngine(oned, (0, 255, 0), (0, 150, 0), (0, 0, 0), 200, audio_sys),
@@ -94,7 +94,7 @@ class Sub:
         self.antenna().update_connection(self.world, self.depth, dt)
 
         # losing connection
-        if self.antenna().get_static_strength(self.world, self.depth) >= 0.9:
+        if self.antenna().get_static_strength(self.world, self.depth) >= 0.9 or self.engine().is_broken():
             self.connection_down += dt
         else:
             self.connection_down = 0

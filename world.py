@@ -6,7 +6,7 @@ class World:
         self.next_check = 100
         self.biomes = [
             ThermalVentsBiome(500, 1000),
-            FloatingRocksBiome(600, 800)
+            #FloatingRocksBiome(600, 800)
         ]
         self.biome_types = [
             ThermalVentsBiome,
@@ -19,6 +19,10 @@ class World:
         if depth > self.next_check:
             self.maybe_new_biome(depth)
             self.next_check += random.randint(75, 275)
+        for biome in self.biomes:
+            if not biome.is_relevant(depth):
+                self.biomes.remove(biome)
+
 
     def maybe_new_biome(self, depth):
         # new biome must be out of sonar range
@@ -26,9 +30,6 @@ class World:
             new_type = self.get_new_biome_type()
             size = random.randint(new_type.min_size(), new_type.max_size())
             self.biomes.append(new_type(depth + 600, depth + 600 + size))
-            print("adding a new " + str(new_type) + " biome at " + str(depth + 600) + " up to " + str(depth + 600 + size))
-        else:
-            print("not adding a new biome")
 
     def get_new_biome_type(self):
         sum_weight = 0
@@ -78,11 +79,21 @@ class World:
             base_objects_mass *= ((biome.nearby_objects_mass_modifier() - 1) * biome.strength(depth)) + 1
         return base_objects_mass
 
+    def get_new_sounds_at(self, depth):
+        sounds = {}
+        for biome in self.biomes:
+            if biome.strength(depth) > 0 and biome.get_sound():
+                sound = biome.get_sound()
+                if sound not in sounds: # only add once - further out biomes can't be heard
+                    sounds[sound] = biome.strength(depth)
+        return sounds
+
 
 class Biome:
     def __init__(self, start, end):
         self.start = start
         self.end = end
+        self.sound_playing = False
 
     @staticmethod
     def prevalence():
@@ -101,11 +112,14 @@ class Biome:
         if self.start < depth < self.end:
             return 1
         # growing for 200 units in & out
-        if 0 < self.start - depth < 200:
-            return 1 - ((self.start - depth) / 200)
-        if 0 < depth - self.end < 200:
-            return 1 - ((depth - self.end) / 200)
+        if 0 < self.start - depth < BIOME_EFFECT_DISTANCE:
+            return 1 - ((self.start - depth) / BIOME_EFFECT_DISTANCE)
+        if 0 < depth - self.end < BIOME_EFFECT_DISTANCE:
+            return 1 - ((depth - self.end) / BIOME_EFFECT_DISTANCE)
         return 0
+
+    def get_sound(self):
+        return None
 
     def temperature_modifier(self):
         return 1
@@ -131,13 +145,22 @@ class Biome:
     def nearby_objects_mass_flat_change(self):
         return 0
 
+    def is_relevant(self, depth):
+        return depth < self.end + BIOME_EFFECT_DISTANCE
+
 class ThermalVentsBiome(Biome):
     def temperature_flat_change(self):
         return 400
 
+    def get_sound(self):
+        return SOUND_HOTSPOT
+
 class CryonicVentsBiome(Biome):
     def temperature_flat_change(self):
         return -250
+
+    def get_sound(self):
+        return SOUND_COLDSPOT
 
 class FloatingRocksBiome(Biome):
     def nearby_objects_flat_change(self):
